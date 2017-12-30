@@ -12,20 +12,22 @@ CON
   _clkmode  = cfg#_clkmode
   _xinfreq  = cfg#_xinfreq
 
-  SCL       = 28
-  SDA       = 29
-  RESET     = 26
-'  NHD       = $78 << 1       'Default slave address of NHD420/US2066
-  NHD       = %0111_100 << 1
-  NHD_WR    = NHD | %0000_0000
-  NHD_RD    = NHD | %0000_0001
-  NHD_DC    = %1000_0000|CMDBIT
-  I2C_CLK   = 100_000
+  SCL           = 28
+  SDA           = 29
+  RESET         = 26
+  I2C_RATE       = 100_000
 
-  DATABIT   = %01_000000  'OR your data byte with one of these two to tell the US2066 whether the following byte is a data byte
-  CMDBIT    = %00_000000  ' or a command byte
-  CONTBIT   = %10_000000 'Continuation bit
-  CTRLBYTE  = CONTBIT | DATABIT
+  NHD           = %0111_100 << 1    '($78) - Default slave address of NHD420/US2066
+  NHD_WR        = NHD | %0000_0000
+  NHD_RD        = NHD | %0000_0001
+  NHD_DC        = %1000_0000|CMDBIT
+
+  DATABIT       = %01_000000        'OR your data byte with one of these two to tell the US2066 whether the following byte is a data byte
+  CMDBIT        = %00_000000        ' or a command byte
+  CONTBIT       = %10_000000        'Continuation bit
+
+  CTRLBYTE_CMD  = CONTBIT | CMDBIT
+  CTRLBYTE_DATA = DATABIT
 
   US2066_PWRON  = $0C
   US2066_PWROFF = $08
@@ -43,48 +45,32 @@ VAR
 
 PUB test1 | i, j, ackbit
 
-  dira[cfg#LED1] := 1
-  dira[cfg#LED2] := 1
-  
-  dira[RESET] := 1
-  outa[RESET] := 0
-
-  ser.Start (115_200)
-  i2c.setup (I2C_CLK)
-  ser.Clear
-  
-  time.MSleep (100)
-  outa[RESET] := 1
-  ser.Str (string("Waiting 100ms..."))
-  time.MSleep (100)
-  
-  ser.Str (string("Ready.", ser#NL))
-  ser.CharIn
+  setup
 
   repeat
     ser.Str (string("Powering on OLED...", ser#NL))
-    cmd(US2066_PWRON)
+    command(US2066_PWRON)
     time.Sleep (2)
 
     ser.Str (string("Powering off OLED...", ser#NL))
-    cmd(US2066_PWROFF)
+    command(US2066_PWROFF)
     time.Sleep (2)
 
-PUB cmd(cmdbyte)|ackbit
+PUB command(cmd) | ackbit
 
   i2c.start
-  ackbit := i2c.write (NHD_WR)
+  ackbit := i2c.write (NHD_WR)            'US2066 Slave address
   if ackbit == i2c#ACK
-    ackbit := i2c.write (%10_000000)  'Co = 1 (1=Continuation bit), D/C = 0 (0=Command bit), 6 0's
+    ackbit := i2c.write (CTRLBYTE_CMD)    'US2066 Control Byte: Command
   else
-    i2c.stop                          'NAK
-    return ackbit
+    i2c.stop
+    return ackbit                         'NAK
 
   if ackbit == i2c#ACK
-    ackbit := i2c.write (cmdbyte)
+    ackbit := i2c.write (cmd)
   else
-    i2c.stop                          'NAK
-    return ackbit
+    i2c.stop
+    return ackbit                         'NAK
   i2c.stop
 
   if ackbit == i2c#ACK
@@ -92,6 +78,47 @@ PUB cmd(cmdbyte)|ackbit
   else
     ser.Str (string("OLED NAKed!", ser#NL))
 
+PUB data(databyte) | ackbit
+
+  i2c.start
+  ackbit := i2c.write (NHD_WR)            'US2066 Slave address
+  if ackbit == i2c#ACK
+    ackbit := i2c.write (CTRLBYTE_DATA)    'US2066 Control Byte: Command
+  else
+    i2c.stop
+    return ackbit                         'NAK
+
+  if ackbit == i2c#ACK
+    ackbit := i2c.write (databyte)
+  else
+    i2c.stop
+    return ackbit                         'NAK
+  i2c.stop
+
+  if ackbit == i2c#ACK
+    ser.Str (string("OLED ACKed!", ser#NL))
+  else
+    ser.Str (string("OLED NAKed!", ser#NL))
+
+
+PUB Setup
+
+  dira[cfg#LED1] := 1
+  dira[cfg#LED2] := 1
+
+  dira[RESET] := 1
+  outa[RESET] := 0
+
+  ser.Start (115_200)
+  i2c.setup (I2C_RATE)
+  ser.Clear
+
+  time.MSleep (100)
+  outa[RESET] := 1
+  time.MSleep (100)
+
+  ser.Str (string("Ready.", ser#NL))
+  ser.CharIn
 
 DAT
 {
