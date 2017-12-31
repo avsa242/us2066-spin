@@ -15,7 +15,7 @@ CON
   SCL           = 28
   SDA           = 29
   RESET         = 26
-  I2C_RATE       = 100_000
+  I2C_RATE      = 400_000
 
   NHD           = %0111_100 << 1    '($78) - Default slave address of NHD420/US2066
   NHD_WR        = NHD | %0000_0000
@@ -29,8 +29,34 @@ CON
   CTRLBYTE_CMD  = CONTBIT | CMDBIT
   CTRLBYTE_DATA = DATABIT
 
-  US2066_PWRON  = $0C
-  US2066_PWROFF = $08
+'  US2066_PWRON  = $0C
+'  US2066_PWROFF = $08
+
+'  US2066_FUNCSEL_C  = $00  'function selection C
+  US2066_DISP_CLEAR = $01  'clear display
+  US2066_COMSEG_DIR = $06  'COM SEG direction
+  US2066_DISP_OFF   = $08  'display off, cursor off, blink off
+  US2066_EXT_FUNCSET= $09  'extended function set (4-lines)
+  US2066_DISP_ON    = $0C  'display ON
+'  US2066_SEGPINS_CNF= $10  'set SEG pins hardware configuration   ' <--------- Change
+  US2066_CMDSET_FUND= $28  'function set (fundamental command set)
+  US2066_CMDSET_EXT = $2A  'function set (extended command set)
+'  US2066_VCOMH_DESEL= $40  'set VCOMH deselect level
+'  US2066_SET_CLKDIV = $70  'set display clock divide ratio/oscillator frequency
+  US2066_EXTA_DISINT= $71  'function selection A, disable internal Vdd regualtor
+  US2066_EXTB_DISINT= $72  'function selection B, disable internal Vdd regualtor
+  US2066_CMDSET_DIS = $78  'OLED command set disabled
+  US2066_CMDSET_ENA = $79  'OLED command set enabled
+'  US2066_CONTRAST   = $7F  'set contrast control
+  US2066_DDRAM_ADDR = $80  'set DDRAM address to $00
+'  US2066_CONTRAST   = $81  'set contrast control
+'  US2066_SET_CLKDIV = $D5  'set display clock divide ratio/oscillator frequency
+'  US2066_PHS_LEN    = $D9  'set phase length
+'  US2066_SEGPINS_CNF= $DA  'set SEG pins hardware configuration
+'  US2066_VCOMH_DESEL= $DB  'set VCOMH deselect level
+'  US2066_FUNCSEL_C  = $DC  'function selection C
+'  US2066_PHS_LEN    = $F1  'set phase length
+
   
 OBJ
 
@@ -149,41 +175,48 @@ PUB Setup
   i2c.setup (I2C_RATE)
   time.MSleep (10)
 
-  command($2A)  'function set (extended command set)
-  command($71)  'function selection A, disable internal Vdd regualtor
+  command(US2066_CMDSET_EXT)  'function set (extended command set)
+  command($71)                'function selection A, disable internal Vdd regualtor
   data($00)
-  command($28)  'function set (fundamental command set)
-  command($08)  'display off, cursor off, blink off
-  command($2A)  'function set (extended command set)
-  command($79)  'OLED command set enabled
-  command($D5)  'set display clock divide ratio/oscillator frequency
-  command($70)  'set display clock divide ratio/oscillator frequency
-  command($78)  'OLED command set disabled
-  command($09)  'extended function set (4-lines)
-  command($06)  'COM SEG direction
-  command($72)  'function selection B, disable internal Vdd regualtor
-  data($00)     'ROM CGRAM selection
-  command($2A)  'function set (extended command set)
-  command($79)  'OLED command set enabled
-  command($DA)  'set SEG pins hardware configuration
-  command($10)  'set SEG pins hardware configuration   ' <--------- Change
-  command($DC)  'function selection C
-  command($00)  'function selection C
-  command($81)  'set contrast control
-  command($7F)  'set contrast control
-  command($D9)  'set phase length
-  command($F1)  'set phase length
-  command($DB)  'set VCOMH deselect level
-  command($40)  'set VCOMH deselect level
-  command($78)  'OLED command set disabled
-  command($28)  'function set (fundamental command set)
-  command($01)  'clear display
-  command($80)  'set DDRAM address to $00
-  command($0C)  'display ON
+  command(US2066_CMDSET_FUND) 'function set (fundamental command set)
+  command(US2066_DISP_OFF)    'display off, cursor off, blink off
+  command(US2066_CMDSET_EXT)  'function set (extended command set)
+  command($79)                'OLED command set enabled
+  command($D5)                'set display clock divide ratio/oscillator frequency
+  command($70)                'set display clock divide ratio/oscillator frequency
+  command($78)                'OLED command set disabled
+  command($09)                'extended function set (4-lines)
+  command($06)                'COM SEG direction
+  command($72)                'function selection B, disable internal Vdd regualtor
+  data($00)                   'ROM CGRAM selection
+  command(US2066_CMDSET_EXT)  'function set (extended command set)
+  command($79)                'OLED command set enabled
+  command($DA)                'set SEG pins hardware configuration
+  command($10)                'set SEG pins hardware configuration   ' <--------- Change
+  command($DC)                'function selection C
+  command($00)                'function selection C
+  command($81)                'set contrast control
+  command($7F)                'set contrast control
+  command($D9)                'set phase length
+  command($F1)                'set phase length
+  command($DB)                'set VCOMH deselect level
+  command($40)                'set VCOMH deselect level
+  command($78)                'OLED command set disabled
+  command(US2066_CMDSET_FUND) 'function set (fundamental command set)
+  command($01)                'clear display
+  command($80)                'set DDRAM address to $00
+  command(US2066_DISP_ON)     'display ON
   time.MSleep(100)
 
   ser.Clear
-  ser.Str (string("Ready.", ser#NL))
+  ser.Str (string("I2C Bus setup on SCL: "))
+  ser.Dec (SCL)
+  ser.Str (string(", SDA: "))
+  ser.Dec (SDA)
+  ser.Str (string(" @"))
+  ser.Dec (I2C_RATE/1000)
+  ser.Str (string("kHz", ser#NL))
+  ser.Str (string("Press any key when ready.", ser#NL))
   ser.CharIn
 
 DAT
