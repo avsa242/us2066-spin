@@ -33,7 +33,14 @@ CON
 '  US2066_PWROFF = $08
 
 '  US2066_FUNCSEL_C  = $00  'function selection C
-  US2066_DISP_CLEAR = $01  'clear display
+  US2066_DISP_CLEAR = $01  'Clear Display
+  US2066_DISP_HOME  = $02  'Return Home (set DDRAM address to $00 and return cursor to its original position if shifted. The contents of DDRAM are not changed.
+  US2066_ENTRY_MODE = $04  'Entry Mode Set
+   LTR              = %10  '(POR) Cursor/blink moves to right and DDRAM addr is inc by 1
+   RTL              = %00  ' Cursor/blink moves to left and DDRAM addr is dec by 1
+   SHIFT            = %01  ' Make display shift of the enabled lines by the DS4 to DS1 bits in the shift enable instruction. Left/right direction depends on I/D bit selection
+   NOSHIFT          = %00  '(POR) Display shift disable
+
   US2066_COMSEG_DIR = $06  'COM SEG direction
   US2066_DISP_OFF   = $08  'display off, cursor off, blink off
   US2066_EXT_FUNCSET= $09  'extended function set (4-lines)
@@ -56,8 +63,21 @@ CON
 '  US2066_VCOMH_DESEL= $DB  'set VCOMH deselect level
 '  US2066_FUNCSEL_C  = $DC  'function selection C
 '  US2066_PHS_LEN    = $F1  'set phase length
-
-  
+{{
+7.2.1
+ Function Selection A [71h] (IS = X, RE = 1, SD=0)
+This double byte command enable or disable the internal VDD regulator at 5V I/O application mode.
+The internal VDD is enabled as default by data 5Ch, whereas it is disabled if the data sequence is set as 00h.
+7.2.2
+ Function Selection B [72h] (IS = X, RE = 1, SD=0)
+Beside using ROM[1:0] and OPR[1:0] hardware pins, the character number of the Character Generator RAM and the character
+ROM can be selected through this command, details refer to
+7.2.3
+ OLED Characterization [78H/ 79h] (IS = X, RE = 1, SD= 0 or 1)
+This single byte command is used to select the OLED command set. When SD is set to 0b , OLED command set is disabled. When
+SD is set to 1b, OLED command set is enabled.
+}}
+ 
 OBJ
 
   cfg   : "config.flip"
@@ -74,7 +94,23 @@ PUB Main | i, j, ackbit
   setup
 
   repeat
-    output
+    hometest1
+'    output
+
+PUB hometest1 | i
+
+  command($01)
+  time.MSleep(2)
+  repeat i from 0 to 19
+    data(text1.byte[i])
+
+  time.MSleep (2000)
+  
+  command($02)
+  repeat i from 0 to 19
+    data(text2.byte[i])
+
+  time.MSleep (2000)
 
 PUB output | i
 
