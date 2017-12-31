@@ -43,18 +43,52 @@ OBJ
 VAR
 
 
-PUB test1 | i, j, ackbit
+PUB Main | i, j, ackbit
 
   setup
 
   repeat
-    ser.Str (string("Powering on OLED...", ser#NL))
-    command(US2066_PWRON)
-    time.Sleep (2)
+    output
 
-    ser.Str (string("Powering off OLED...", ser#NL))
-    command(US2066_PWROFF)
-    time.Sleep (2)
+PUB output | i
+
+  command($01)
+  time.MSleep(2)
+  repeat i from 0 to 19
+    data(text1.byte[i])
+
+  command($A0)
+  repeat i from 0 to 19
+    data(text2.byte[i])
+
+  command($C0)
+  repeat i from 0 to 19
+    data(text3.byte[i])
+
+  command($E0)
+  repeat i from 0 to 19
+    data(text4.byte[i])
+
+  time.MSleep(2000)
+
+	command($01)
+  time.MSleep(2)
+	repeat i from 0 to 19
+		data(text3.byte[i])
+
+	command($A0)
+	repeat i from 0 to 19
+		data(text4.byte[i])
+
+	command($C0)
+	repeat i from 0 to 19
+		data(text1.byte[i])
+
+	command($E0)
+	repeat i from 0 to 19
+		data(text2.byte[i])
+
+  time.MSleep (2000)
 
 PUB command(cmd) | ackbit
 
@@ -74,7 +108,7 @@ PUB command(cmd) | ackbit
   i2c.stop
 
   if ackbit == i2c#ACK
-    ser.Str (string("OLED ACKed!", ser#NL))
+'    ser.Str (string("OLED ACKed!", ser#NL))
   else
     ser.Str (string("OLED NAKed!", ser#NL))
 
@@ -96,10 +130,9 @@ PUB data(databyte) | ackbit
   i2c.stop
 
   if ackbit == i2c#ACK
-    ser.Str (string("OLED ACKed!", ser#NL))
+'    ser.Str (string("OLED ACKed!", ser#NL))
   else
     ser.Str (string("OLED NAKed!", ser#NL))
-
 
 PUB Setup
 
@@ -110,15 +143,55 @@ PUB Setup
   outa[RESET] := 0
 
   ser.Start (115_200)
-  i2c.setup (I2C_RATE)
-  ser.Clear
 
-  time.MSleep (100)
   outa[RESET] := 1
-  time.MSleep (100)
+  time.MSleep (10)
+  i2c.setup (I2C_RATE)
+  time.MSleep (10)
 
+  command($2A)  'function set (extended command set)
+  command($71)  'function selection A, disable internal Vdd regualtor
+  data($00)
+  command($28)  'function set (fundamental command set)
+  command($08)  'display off, cursor off, blink off
+  command($2A)  'function set (extended command set)
+  command($79)  'OLED command set enabled
+  command($D5)  'set display clock divide ratio/oscillator frequency
+  command($70)  'set display clock divide ratio/oscillator frequency
+  command($78)  'OLED command set disabled
+  command($09)  'extended function set (4-lines)
+  command($06)  'COM SEG direction
+  command($72)  'function selection B, disable internal Vdd regualtor
+  data($00)     'ROM CGRAM selection
+  command($2A)  'function set (extended command set)
+  command($79)  'OLED command set enabled
+  command($DA)  'set SEG pins hardware configuration
+  command($10)  'set SEG pins hardware configuration   ' <--------- Change
+  command($DC)  'function selection C
+  command($00)  'function selection C
+  command($81)  'set contrast control
+  command($7F)  'set contrast control
+  command($D9)  'set phase length
+  command($F1)  'set phase length
+  command($DB)  'set VCOMH deselect level
+  command($40)  'set VCOMH deselect level
+  command($78)  'OLED command set disabled
+  command($28)  'function set (fundamental command set)
+  command($01)  'clear display
+  command($80)  'set DDRAM address to $00
+  command($0C)  'display ON
+  time.MSleep(100)
+
+  ser.Clear
   ser.Str (string("Ready.", ser#NL))
   ser.CharIn
+
+DAT
+
+  text1 byte "Newhaven Display----"
+  text2 byte "Test----------------"
+  text3 byte "16/20 Characters----"
+  text4 byte "!@#$%^&*()_+{}[]<>?~"
 
 DAT
 {
