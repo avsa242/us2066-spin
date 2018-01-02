@@ -16,7 +16,7 @@ CON
   SCL       = 28
   SDA       = 29
   RESET     = 26
-  I2C_HZ    = 1_220
+  I2C_HZ    = 400_000
 
 OBJ
 

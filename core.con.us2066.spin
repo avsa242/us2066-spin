@@ -1,18 +1,15 @@
 {
     --------------------------------------------
-    Filename:
-    Author:
-    Copyright (c) 20__
+    Filename: core.con.us2066.spin
+    Author: Jesse Burt
+    Version: 0.1
+    Description: US2066 OLED Display driver command set
+    Copyright (c) 2018
     See end of file for terms of use.
     --------------------------------------------
 }
 
 CON
-
-  NHD           = %0111_100 << 1    '($78) - Default slave address of NHD420/US2066
-  NHD_WR        = NHD | %0000_0000
-  NHD_RD        = NHD | %0000_0001
-  NHD_DC        = %1000_0000|CMDBIT
 
   DATABIT       = %01_000000        'OR your data byte with one of these two to tell the US2066 whether the following byte is a data byte
   CMDBIT        = %00_000000        ' or a command byte
