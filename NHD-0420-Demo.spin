@@ -1,28 +1,61 @@
 {
     --------------------------------------------
-    Filename:
-    Author:
-    Copyright (c) 20__
+    Filename: NHD-0420-Demo.spin
+    Version: 0.1
+    Author: Jesse Burt
+    Copyright (c) 2018
     See end of file for terms of use.
     --------------------------------------------
 }
 
 CON
 
+  _clkmode = cfg#_clkmode
+  _xinfreq = cfg#_xinfreq
+
+  SCL       = 28
+  SDA       = 29
+  RESET     = 26
+  I2C_HZ    = 1_220
+
+OBJ
+
+  cfg   : "config.flip"
+  time  : "time"
+  oled  : "display.oled.4x20.i2c"
 
 VAR
 
 
-OBJ
+PUB Main
 
+  oled.start (SCL, SDA, RESET, I2C_HZ)
+  oled.Clear
+  
+  oled.Position (0, 0)
+  oled.Str (@line1)
+  time.Sleep (1)
+  
+  oled.Position (0, 1)
+  oled.Str (@line2)
+  time.Sleep (1)
+  
+  oled.Position (0, 2)
+  oled.Str (@line3)
+  time.Sleep (1)
+  
+  oled.Position (0, 3)
+  oled.Str (@line4)
+  
 
-PUB null
-''This is not a top-level object
+  repeat
+  
+DAT
 
-PUB Start
-
-PRI
-
+  line1 byte  "Parallax P8X32A     ", 0
+  line2 byte  "     on the         ", 0
+  line3 byte  "Newhaven Displays   ", 0
+  line4 byte  "NHD420 4x20 OLED    ", 0
 
 DAT
 {
