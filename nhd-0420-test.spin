@@ -1,8 +1,10 @@
 {
     --------------------------------------------
-    Filename:
-    Author:
-    Copyright (c) 20__
+    Filename: nhd-0420-test.spin
+    Author: Jesse Burt
+    Description: Test fixture for to exercise various
+     US2066 functions on the NHD-0420 OLED display
+    Copyright (c) 2018
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -29,6 +31,7 @@ OBJ
   time  : "time"
   debug : "debug"
   oled  : "display.oled.4x20.i2c"
+  int   : "string.integer"
 
 VAR
 
@@ -36,151 +39,102 @@ VAR
 
 PUB Main | i, j, ackbit, data_in
 
-  delay := 50
+  delay := 10
   setup
 
   ser.Str (string("Running..."))
   time.MSleep (500)
+  oled.SetDisplayCursorBlink (TRUE, TRUE, TRUE)
 
   repeat
-    output_test
-'    output1to4_test
-'    home_test
-'    oled.Str (string("test"))
-'    contrast_test
-'    dblht_test
-'    pos_test
-'    newline_test
-'  oled.Position (16, 3)
-'  oled.Str (string("test"))
-'  output1to4_test
-'  oled.SetContrast (1)
-'  oled.Home
-'  contrast_test
+    repeat i from 1 to 4
+      oled.SetDisplayLines (i)
+      output1to4_test
+      time.Sleep (2)
   debug.LEDFast (cfg#LED2)
 
-PUB newline_test
-    oled.Str(string("Test", 13))
-    time.mSleep (100)
-    oled.Str(string("1234", 13))
-    time.mSleep (100)
-    oled.Str(string("5678", 13))
-    time.mSleep (100)
-    oled.Str(string("9ABC", 13))
-    time.mSleep (100)
-    oled.Str(string("DEF1", 13))
+PUB cr_test
 
-
-PUB pos_test | i, j
-
-  repeat
-    repeat i from 0 to 3
-      repeat j from 0 to 19
-        oled.Position(j, i)
-        oled.Char($20)
-        oled.Char("-")
-        time.MSleep (10)
-
-
-PUB dblht_test
-
-  oled.DoubleHeight(0)
-  oled.Position(0, 0)
-  oled.Str(string("Testing"))
-  oled.Position(0, 1)
-  oled.Str(string("Mode 0"))
-  oled.Position(0, 2)
-  oled.Str(string("Line 3"))
-  oled.Position(0, 3)
-  oled.Str(string("Line 4"))
+  oled.StrDelay (string("Testing 1 2 3 CR"), 50)
   time.Sleep (2)
-  oled.Clear
-    
-  oled.DoubleHeight(1)
-  oled.Position(0, 0)
-  oled.Str(string("Testing"))
-  oled.Position(0, 1)
-  oled.Str(string("Mode 1"))
-  oled.Position(0, 2)
-  oled.Str(string("Line 3"))
-  oled.Position(0, 3)
-  oled.Str(string("Line 4"))
+  oled.CR
   time.Sleep (2)
   oled.Clear
 
-  oled.DoubleHeight(2)
-  oled.Position(0, 0)
-  oled.Str(string("Testing"))
-  oled.Position(0, 1)
-  oled.Str(string("Mode 2"))
-  oled.Position(0, 2)
-  oled.Str(string("Line 3"))
-  oled.Position(0, 3)
-  oled.Str(string("Line 4"))
-  time.Sleep (2)
-  oled.Clear
+PUB all_chars_test | i
 
-  oled.DoubleHeight(3)
-  oled.Position(0, 0)
-  oled.Str(string("Testing"))
-  oled.Position(0, 1)
-  oled.Str(string("Mode 3"))
-  oled.Position(0, 2)
-  oled.Str(string("Line 3"))
-  oled.Position(0, 3)
-  oled.Str(string("Line 4"))
-  time.Sleep (2)
-  oled.Clear
+  repeat i from 0 to 255
+    oled.Char_Literal (i)
+    time.MSleep (delay)
+
+PUB count_test | i
+
+  repeat i from 0 to 65535
+    oled.Position (0, 0)
+    oled.Str (string("i = "))
+    oled.Str (int.Dec (i))
+
+PUB delaychar_test
+
+  oled.StrDelay (string("This is a test of"), delay)
+  oled.Newline
+  oled.StrDelay (string("the StrDelay method"), delay)
   
-  oled.DoubleHeight(4)
-  oled.Position(0, 0)
-  oled.Str(string("Testing"))
-  oled.Position(0, 1)
-  oled.Str(string("Mode 4"))
-  oled.Position(0, 2)
-  oled.Str(string("Line 3"))
-  oled.Position(0, 3)
-  oled.Str(string("Line 4"))
-  time.Sleep (2)
-  oled.Clear
+PUB newline_test
+
+    oled.Str(string("Test", 13))
+    time.mSleep (delay)
+    oled.Str (@line1)
+    time.mSleep (delay)
+    oled.Str (@line2)
+    time.mSleep (delay)
+    oled.Str (@line3)
+    time.mSleep (delay)
+    oled.Str (@line4)
+
+PUB pos_test | x, y
+
+  repeat y from 0 to 3
+    repeat x from 0 to 19
+      oled.Position(0, 0)
+      oled.Str (string("Position "))
+      oled.Str (int.DecPadded(x, 2))
+      oled.Char_Literal (" ")
+      oled.Str (int.Dec(y))
+      oled.Position(x, y)
+      oled.Char($20)
+      oled.Char("-")
+      time.MSleep (50)
+
+PUB dblht_test | mode, line
+
+  repeat mode from 0 to 4
+    oled.SetDoubleHeight (mode)
+    oled.Position (14, 0)
+    oled.Str (string("Mode "))
+    oled.Str (int.Dec(mode))
+    repeat line from 0 to 3
+      oled.Position (0, line)
+      oled.Str (string("Line "))
+      oled.Str (int.Dec(line))
+    time.Sleep (2)
 
 PUB contrast_test | i
 
   repeat i from 0 to 255 step 16
     oled.SetContrast (i)
-    ser.Str (string("Contrast level "))
-    ser.Dec (i)
-    ser.NewLine
+    oled.Position (0, 0)
+    oled.Str (string("Contrast level "))
+    oled.Str (int.DecPadded (i, 3))
     time.MSleep (250)
 
   repeat i from 255 to 0 step 16
     oled.SetContrast (i)
-    ser.Str (string("Contrast level "))
-    ser.Dec (i)
-    ser.NewLine
+    oled.Position (0, 0)
+    oled.Str (string("Contrast level "))
+    oled.Str (int.DecPadded (i, 3))
     time.MSleep (250)
   
-{PUB dump_display | r, c, ackbit, data_in
-
-  ser.Str (string("Dump display data: ", ser#NL))
-  
-  i2c.start
-  ackbit := i2c.write (SLAVE_RD)        'Dummy read first byte, according to p.40, sec 7.1.15
-  i2c.read (TRUE)
-
-  repeat r from 0 to 3
-    ser.Dec (r)
-    ser.Str (string(": "))
-    repeat c from 0 to 19
-      i2c.start
-      ackbit := i2c.write (SLAVE_RD)
-      data_in := i2c.read (TRUE)
-      ser.Char (data_in)
-'      ser.Hex (data_in, 2)
-'      ser.Char (" ")
-    ser.NewLine
-  i2c.stop
-}
 PUB home_test | i 'WORKS
 
   oled.Clear
@@ -240,29 +194,22 @@ PUB Setup
   dira[cfg#LED1] := 1
   dira[cfg#LED2] := 1
 
-  dira[RESET] := 1
-  outa[RESET] := 0
-
-  
-'  outa[RESET] := 1
   ifnot oled.start (SCL, SDA, RESET, I2C_RATE)
     debug.LEDSlow (27)
-  outa[RESET] := 1
-  time.MSleep (1)
 
-  oled.SetInternalReg(FALSE)                          'GGG
-  oled.SetDisplayCursorBlink (FALSE, FALSE, FALSE)    'GGG
-  oled.SetClockDivOscFreq(7, 0)                       'GGG
-  oled.SetFontCursorLineMode (FALSE, FALSE, TRUE)     'GGG
-  oled.SetCharGenCharROM (%00, %00)                   'GGG
-  oled.SetBiDirection (1, 0)                          'GGG - had to add
-  oled.SetSEGPinCFG ({1}0, {0}1)                      'GGG
-  oled.SetVSLGPIO (0, 0)                              'GGG
-  oled.SetContrast ($7F)                              'GGG
-  oled.SetPhaseLength ($F, $1)                        'GGGf
-  oled.SetVcomhDeselectLevel (4)                      'GGG
-  oled.Clear                                          'GGG
-  oled.Position (0, 0)                                'GGG
+  oled.SetInternalReg(FALSE)
+  oled.SetDisplayCursorBlink (FALSE, FALSE, FALSE)
+  oled.SetClockDivOscFreq(7, 0)
+  oled.SetFontCursorLineMode (FALSE, FALSE, TRUE)
+  oled.SetCharGenCharROM (%11{%00}, %01{%00})     'Changed from recommended initialization sequence
+  oled.SetBiDirection (1, 0)
+  oled.SetSEGPinCFG ({1}0, {0}1)                  'Changed from recommended initialization sequence
+  oled.SetVSLGPIO (0, 0)
+  oled.SetContrast ($7F)
+  oled.SetPhaseLength ($F, $1)
+  oled.SetVcomhDeselectLevel (4)
+  oled.Clear
+  oled.Position (0, 0)
   oled.SetDisplayCursorBlink (TRUE, FALSE, FALSE)
   time.MSleep (100)
   
