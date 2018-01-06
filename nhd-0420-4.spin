@@ -38,18 +38,25 @@ PUB Main | i, j, ackbit, data_in
 
   delay := 50
   setup
-'WORKS: CLEAR, HOME, RTL, LTR, COM31_0, COM0_31, DISPLAY_ONOFF, DISP_ON, DISP_OFF, CURSOR_ON, BLINK_ON
+
   ser.Str (string("Running..."))
   time.MSleep (500)
-  oled.Display (TRUE)
-  oled.SetCursor (0)
-  oled.Clear
-  oled.StrDelay (string("Contrast test..."))
-  time.Sleep (2)
-  oled.Clear
-  output1to4_test
-  repeat 5
-    contrast_test
+
+  repeat
+    output_test
+'    output1to4_test
+'    home_test
+'    oled.Str (string("test"))
+'    contrast_test
+'    dblht_test
+'    pos_test
+'    newline_test
+'  oled.Position (16, 3)
+'  oled.Str (string("test"))
+'  output1to4_test
+'  oled.SetContrast (1)
+'  oled.Home
+'  contrast_test
   debug.LEDFast (cfg#LED2)
 
 PUB newline_test
@@ -191,8 +198,7 @@ PUB home_test | i 'WORKS
 
 PUB output1to4_test | i
 
-  oled.Clear
-  time.MSleep(2)
+  oled.Position(0, 0)
   repeat i from 0 to 19
     oled.Char(line1.byte[i])
 
@@ -212,8 +218,7 @@ PUB output1to4_test | i
 
 PUB output_test | i 'WORKS
 
-  oled.Clear
-  time.MSleep(2)
+  oled.Position (0, 0)
   repeat i from 0 to 19
     oled.Char(text1.byte[i])
 
@@ -221,38 +226,47 @@ PUB output_test | i 'WORKS
   repeat i from 0 to 19
     oled.Char(text2.byte[i])
 
-  oled.Position (0, 1)
+  oled.Position (0, 2)
   repeat i from 0 to 19
     oled.Char(text3.byte[i])
 
-  oled.Position (0, 1)
+  oled.Position (0, 3)
   repeat i from 0 to 19
     oled.Char(text4.byte[i])
 
 PUB Setup
 
+  ser.Start (115_200)
   dira[cfg#LED1] := 1
   dira[cfg#LED2] := 1
 
   dira[RESET] := 1
   outa[RESET] := 0
 
-  ser.Start (115_200)
-
-  ser.Clear
   
+'  outa[RESET] := 1
+  ifnot oled.start (SCL, SDA, RESET, I2C_RATE)
+    debug.LEDSlow (27)
   outa[RESET] := 1
-  time.MSleep (10)
-  oled.start (SCL, SDA, RESET, I2C_RATE)
-  time.MSleep (10)
+  time.MSleep (1)
 
-  oled.InternalReg(FALSE)
-  oled.Display(FALSE)
+  oled.SetInternalReg(FALSE)                          'GGG
+  oled.SetDisplayCursorBlink (FALSE, FALSE, FALSE)    'GGG
+  oled.SetClockDivOscFreq(7, 0)                       'GGG
+  oled.SetFontCursorLineMode (FALSE, FALSE, TRUE)     'GGG
+  oled.SetCharGenCharROM (%00, %00)                   'GGG
+  oled.SetBiDirection (1, 0)                          'GGG - had to add
+  oled.SetSEGPinCFG ({1}0, {0}1)                      'GGG
+  oled.SetVSLGPIO (0, 0)                              'GGG
+  oled.SetContrast ($7F)                              'GGG
+  oled.SetPhaseLength ($F, $1)                        'GGGf
+  oled.SetVcomhDeselectLevel (4)                      'GGG
+  oled.Clear                                          'GGG
+  oled.Position (0, 0)                                'GGG
+  oled.SetDisplayCursorBlink (TRUE, FALSE, FALSE)
+  time.MSleep (100)
   
-  oled.SetClockDivOscFreq(7, 0)
-
-  oled.SetupBlob
-'  ser.Clear
+  ser.Clear
   ser.Str (string("I2C Bus setup on SCL: "))
   ser.Dec (SCL)
   ser.Str (string(", SDA: "))
@@ -260,8 +274,8 @@ PUB Setup
   ser.Str (string(" @"))
   ser.Dec (I2C_RATE/1000)
   ser.Str (string("kHz", ser#NL))
-  ser.Str (string("Press any key when ready.", ser#NL))
-  ser.CharIn
+'  ser.Str (string("Press any key when ready.", ser#NL))
+'  ser.CharIn
 
 DAT
 

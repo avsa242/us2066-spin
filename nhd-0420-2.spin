@@ -219,7 +219,7 @@ PUB Main | i, j, ackbit, data_in
   time.MSleep (500)
   command(DISPLAY_ONOFF | DISP_ON | CURSOR_ON | BLINK_ON)
 
-  repeat
+{  repeat
     Str(string("Test", 13))
 '    time.mSleep (100)
     Str(string("1234", 13))
@@ -231,6 +231,9 @@ PUB Main | i, j, ackbit, data_in
     Str(string("DEF1", 13))
 '    hometest1
 '    output
+}
+  Position(0, 3)
+  Str(string("test"))
   debug.LEDFast (cfg#LED2)
 
 PUB Newline: row | pos
@@ -620,7 +623,7 @@ PUB Setup
   
   SetClockDivOscFreq(7, 0)
 
-  command(EXTENDED_FUNCSET | NW_3_4_LINE) 'extended function set (4-lines)
+  command(EXTENDED_FUNCSET | NW_3_4_LINE | CURSOR_INVERT) 'extended function set (4-lines)
   command($06)                              'COM SEG direction
   command(FUNCTION_SEL_B)                   'function selection B, disable internal Vdd regualtor
   data($00)                                 'ROM CGRAM selection
