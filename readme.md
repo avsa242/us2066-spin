@@ -3,3 +3,5 @@ This is a driver, or object, for the Parallax Propeller MCU (https://www.paralla
 It was written using I2C as the low-level communication interface (thanks to Jon McPhalen for the I2C object!)
 
 The object uses one extra cog/core for the I2C interface.
+
+NOTE: This uses a few other objects from an external repository, also housed on github, the spin-standard-library (https://github.com/parallaxinc/spin-standard-library.git)
