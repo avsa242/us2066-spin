@@ -44,14 +44,16 @@ PUB Main | i, j, ackbit, data_in
 
   ser.Str (string("Running..."))
   time.MSleep (500)
-  oled.SetDisplayCursorBlink (TRUE, FALSE, FALSE)
-  oled.SetContrast (255)
-  oled.SetFadeOut_Blinking (2, 0)
+  oled.SetDisplayCursorBlink (TRUE, TRUE, TRUE)
 
-  output1to4_test
   repeat
-  oled.Position (19, 3)
-  oled.Char_Literal ("E")
+    oled.Char(ser.CharIn)
+    ser.str(string("Position: "))
+    ser.hex(oled.GetPos, 2)
+    ser.newline
+'    oled.Position(0, 0)
+'    oled.Str(int.Hex(ser.CharIn, 2))
+
   debug.LEDFast (cfg#LED2)
 
 PUB cr_test

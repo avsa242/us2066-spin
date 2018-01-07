@@ -58,45 +58,44 @@ PUB Backspace | pos, col, row
         Char_Literal ($20)
         Position(pos-1, 0)
       else
-        Position (0, 0)     'Limit to upper-left
+        Position (0, 0)     'Stop upper-left / HOME
         Char_Literal ($20)
         Position (0, 0)
-{        Position(19, 3)    'Wrap around to end of display
-        Char_Literal ($20)
-        Position(19, 3)
-}
+'        Position(19, 3)    'Wrap around to end of display
+'        Char_Literal ($20)
+'        Position(19, 3)
+
     $20..$33:
       if pos > $20
-        Position(pos-1, 1)
+	col := pos-$20
+        Position(col-1, 1)
         Char_Literal ($20)
-        Position(pos-1, 1)
+        Position(col-1, 1)
       else
         Position(19, 0)
         Char_Literal ($20)
         Position(19, 0)
     $40..$53:
       if pos > $40
-        Position(pos-1, 2)
+	col := pos-$40
+        Position(col-1, 2)
         Char_Literal ($20)
-        Position(pos-1, 2)
+        Position(col-1, 2)
       else
         Position(19, 1)
         Char_Literal ($20)
         Position(19, 1)
-    $60..$73: row := 3
-      if pos == $73
-        Position (pos-2, 3)
+    $60..$73:
+      if pos > $60
+	col := pos-$60
+        Position (col-1, 3)
         Char_Literal ($20)
-        Position (pos-2, 3)
-      elseif pos > $60
-        Position (pos-1, 3)
-        Char_Literal ($20)
-        Position (pos-1, 3)
+        Position (col-1, 3)
       else
         Position (19, 2)
         Char_Literal ($20)
         Position (19, 2)
-    OTHER: row := 0     'Not sure how else to handle this, atm
+    OTHER: Position (0, 0)     'Not sure how else to handle this, atm
 
 
 PUB Char_Literal(ch)
@@ -105,13 +104,15 @@ PUB Char_Literal(ch)
   data(ch)
 
 PUB Char(ch)
-'' Display single character. Display controller doesn't handle newline
-''  on its own, so we have to implement one.
+'' Display single character. Display controller doesn't handle control characters
+''  on its own, so we have to implement processing to handle some of them.
   case ch
-    8:
+    8, $7F:
       Backspace
     10:
       CarriageReturn
+    12:
+      Clear
     13:
       Newline
     OTHER:

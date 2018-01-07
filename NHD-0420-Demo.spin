@@ -31,35 +31,37 @@ VAR
 PUB Main
 
   Setup
+  oled.SetContrast (255)
 
-  Greet_Demo
-  time.Sleep (4)
-  oled.Clear
+  repeat
+    Greet_Demo
+    time.Sleep (4)
+    oled.Clear
 
-  Count_Demo
-  time.Sleep (4)
-  oled.Clear
+    Count_Demo
+    time.Sleep (4)
+    oled.Clear
 
-  DoubleHeight_Demo
-  time.Sleep (4)
-  oled.Clear
+    DoubleHeight_Demo
+    time.Sleep (4)
+    oled.Clear
 
-  Contrast_Demo
-  time.Sleep (4)
-  oled.Clear
+    Contrast_Demo
+    time.Sleep (4)
+    oled.Clear
 
-  oled.SetDoubleHeight (0)
+    oled.SetDoubleHeight (0)
 
-  Position_Demo
-  time.Sleep (4)
-  oled.Clear
+    Position_Demo
+    time.Sleep (4)
+    oled.Clear
 
-  Cursor_demo
-  time.Sleep (4)
-  oled.Clear
+    Cursor_demo
+    time.Sleep (4)
+    oled.Clear
 
-  oled.SetDoubleHeight (0)
-
+    oled.SetDoubleHeight (0)
+    oled.SetDisplayCursorBlink (TRUE, FALSE, FALSE)
   repeat
 
 PUB Contrast_Demo | i
@@ -166,7 +168,6 @@ PUB Setup
   oled.Position (0, 0)
   oled.SetDisplayCursorBlink (TRUE, FALSE, FALSE)
   time.MSleep (100)
-
  
 DAT
 
