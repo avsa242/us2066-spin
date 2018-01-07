@@ -323,19 +323,20 @@ PUB SetFadeOut_Blinking(fade_blink_mode, interval)
 ''    0: Disable fade out / blinking (RESET)
 ''    1: Enable fade out (contrast fades out until display off, and stays off)
 ''    2: Enable blink (contrast fades out until display off, then fades back on)
+''    Any other value is treated as 0
 ''  interval - Time interval for each fade step
 ''    %0000..%1111 = 8 frames..128 frames
   case fade_blink_mode
     0: fade_blink_mode := %00 << 4
     1: fade_blink_mode := %10 << 4
     2: fade_blink_mode := %11 << 4
-
+    OTHER: fade_blink_mode := %00 << 4
   interval := (||interval <# 15)
 
   CMDSet_Extended
   CMDSet_OLED (TRUE)
   command(us2066#FADEOUT_BLINK)
-  command(fade_enable | blink_enable | interval)
+  command(fade_blink_mode | interval)
   CMDSet_OLED (FALSE)
   CMDSet_Fundamental
 

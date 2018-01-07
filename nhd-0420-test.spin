@@ -46,7 +46,7 @@ PUB Main | i, j, ackbit, data_in
   time.MSleep (500)
   oled.SetDisplayCursorBlink (TRUE, FALSE, FALSE)
   oled.SetContrast (255)
-  oled.SetFadeOut_Blinking (0, 1, 1)
+  oled.SetFadeOut_Blinking (2, 0)
 
   output1to4_test
   repeat
