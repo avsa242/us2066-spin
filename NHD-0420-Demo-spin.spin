@@ -1,6 +1,6 @@
 {
     --------------------------------------------
-    Filename: NHD-0420-Demo.spin
+    Filename: NHD-0420-Demo-spin.spin
     Version: 0.2
     Author: Jesse Burt
     Copyright (c) 2018
