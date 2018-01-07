@@ -30,7 +30,7 @@ OBJ
   ser   : "com.serial.terminal"
   time  : "time"
   debug : "debug"
-  oled  : "display.oled.4x20.i2c"
+  oled  : "display.oled.4x20.i2c-pasm"
   int   : "string.integer"
 
 VAR

@@ -25,7 +25,7 @@ OBJ
 
   us2066: "core.con.us2066"
   time  : "time"
-  i2c   : "jm_i2c"
+  i2c   : "jm_i2c_fast"
 
 VAR
 
@@ -34,15 +34,19 @@ VAR
 PUB null
 ''This is not a top-level object
 
-PUB start(scl, sda, reset): okay
-
-  okay := i2c.setupx (scl, sda)
+PUB start(scl, sda, reset, hz): okay
+'' I2C Effective Bus rates from 1221 up to 400000
+  okay := i2c.setupx (scl, sda, hz)
 
   dira[reset] := 1
   outa[reset] := 0
 
   outa[reset] := 1
   time.MSleep (1)
+
+PUB stop
+
+  i2c.terminate
 
 PUB Backspace | pos, col, row
 '' The display controller doesn't seem to handle Backspace by itself, so we have to implement it in software

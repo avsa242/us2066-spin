@@ -16,7 +16,6 @@ CON
   SCL       = 28
   SDA       = 29
   RESET     = 26
-  I2C_HZ    = 400_000
 
 OBJ
 
@@ -154,8 +153,7 @@ PUB Position_Demo | x, y
 
 PUB Setup
 
-  oled.start (SCL, SDA, RESET, I2C_HZ)
-
+  oled.start (SCL, SDA, RESET)
   oled.SetInternalReg(FALSE)
   oled.SetDisplayCursorBlink (FALSE, FALSE, FALSE)
   oled.SetClockDivOscFreq(7, 0)
