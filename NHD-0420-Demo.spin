@@ -1,7 +1,7 @@
 {
     --------------------------------------------
     Filename: NHD-0420-Demo.spin
-    Version: 0.1
+    Version: 0.2
     Author: Jesse Burt
     Copyright (c) 2018
     See end of file for terms of use.
@@ -31,7 +31,6 @@ VAR
 PUB Main
 
   Setup
-  oled.SetContrast (255)
 
   repeat
     Greet_Demo
@@ -49,7 +48,7 @@ PUB Main
     Contrast_Demo
     time.Sleep (4)
     oled.Clear
-
+    
     oled.SetDoubleHeight (0)
 
     Position_Demo
@@ -75,6 +74,10 @@ PUB Contrast_Demo | i
     oled.Position (0, 2)
     oled.SetContrast (i)
     oled.Str (int.DecPadded (||i, 3))
+    oled.Char_Literal (32)
+    oled.Str (int.Hex(||i, 2))
+    oled.Char_Literal (32)
+    oled.Str (int.Bin(||i, 8))
     time.MSleep (10)
 
 PUB Count_Demo | i

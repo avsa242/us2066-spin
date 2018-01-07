@@ -19,6 +19,7 @@ CON
 
   CR            = 10  'Carriage-return
   NL            = 13  'Newline
+  SP            = 32  'Space
 
 OBJ
 
@@ -100,7 +101,6 @@ PUB Backspace | pos, col, row
 
 PUB Char_Literal(ch)
 '' Display single character (pass data through without processing it first)
-
   data(ch)
 
 PUB Char(ch)
@@ -144,7 +144,6 @@ PUB CMDSet_Fundamental
 '' We have to store the state of the double-height font setting on the host,
 ''  otherwise, when switching back and forth between command sets, the setting
 ''  gets lost.
-
   if _dblht_mode
     command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#DBLHT_FONT_EN)
   else
@@ -240,7 +239,6 @@ PUB SetClockDivOscFreq(frequency, divisor)
 '' Set display clock divide ratio
 '' divisor:    DCLKs   Range %0000..%1111 (POR %0000)
 '' frequency:  (Freq)  Range %0000..%1111 (POR %0111)
-
   CMDSet_Extended
   CMDSet_OLED (TRUE)
 
@@ -272,7 +270,6 @@ PUB SetDisplayCursorBlink(disp_onoff, cursor_onoff, blink_onoff)
 '' disp_onoff:    %0: Display Off (POR)   %1: Display On
 '' cursor_onoff:  %0: Cursor Off (POR)    %1: Cursor On
 '' blink_onoff:   %0: Blink Off (POR)     %1: Blink On
-
   disp_onoff := (||disp_onoff <# 1) << 2
   cursor_onoff := (||cursor_onoff <# 1) << 1
   blink_onoff := (||blink_onoff <# 1)
@@ -434,20 +431,17 @@ PUB Str(stringptr)
 
 PUB Str_Literal(stringptr)
 '' Display zero-terminated string. Don't process input.
-
   repeat strsize(stringptr)
     Char_Literal(byte[stringptr++])
 
 PUB StrDelay(stringptr, delay)' XXX May be removed in the future
 '' Display zero-terminated string with inter-character delay, in ms
-
   repeat strsize(stringptr)
     Char(byte[stringptr++])
     time.MSleep (delay)
 
 PUB StrDelay_Literal(stringptr, delay)' XXX May be removed in the future
 '' Display zero-terminated string with inter-character delay, in ms. Don't process input.
-
   repeat strsize(stringptr)
     Char_Literal(byte[stringptr++])
     time.MSleep (delay)
