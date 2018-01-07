@@ -20,18 +20,76 @@ CON
 
 OBJ
 
-  cfg   : "config.flip"
+  cfg   : "core.con.client.flip"
   time  : "time"
   oled  : "display.oled.4x20.i2c"
+  int   : "string.integer"
 
 VAR
 
 
 PUB Main
 
-  oled.start (SCL, SDA, RESET, I2C_HZ)
+  Setup
+
+  Greet_Demo
+  time.Sleep (4)
+  oled.Clear
+
+  Count_Demo
+  time.Sleep (4)
+  oled.Clear
+
+  DoubleHeight_Demo
+  time.Sleep (4)
+  oled.Clear
+
+  Contrast_Demo
+  time.Sleep (4)
+  oled.Clear
+
+  Position_Demo
+  time.Sleep (4)
   oled.Clear
   
+  repeat
+
+PUB Contrast_Demo | i
+
+  oled.Position (0, 0)
+  oled.Str (string("Change contrast", oled#NL, "level:"))
+  oled.Newline
+  oled.SetDoubleHeight (1)
+
+  repeat i from -255 to 255 step 1
+    oled.Position (0, 2)
+    oled.SetContrast (i)
+    oled.Str (int.DecPadded (||i, 3))
+    time.MSleep (10)
+
+PUB Count_Demo | i
+
+  oled.Position (0, 0)
+  oled.Str (string("Rapidly changing", oled#NL, "display contents", oled#NL, "(compare to LCD!)"))
+  repeat i from 0 to 5120
+    oled.Position (0, 3)
+    oled.Str (string("i = "))
+    oled.Str (int.Dec (i))
+
+PUB DoubleHeight_Demo | mode, line
+
+  repeat mode from 0 to 4
+    oled.SetDoubleHeight (mode)
+    oled.Position (14, 0)
+    oled.Str (string("Mode "))
+    oled.Str (int.Dec(mode))
+    repeat line from 0 to 3
+      oled.Position (0, line)
+      oled.Str (string("Double-height"))
+    time.Sleep (1)
+
+PUB Greet_Demo
+
   oled.Position (0, 0)
   oled.Str (@line1)
   time.Sleep (1)
@@ -46,10 +104,43 @@ PUB Main
   
   oled.Position (0, 3)
   oled.Str (@line4)
-  
 
-  repeat
+PUB Position_Demo | x, y
   
+  repeat y from 0 to 3
+    repeat x from 0 to 19
+      oled.Position(0, 0)
+      oled.Str (string("Position "))
+      oled.Str (int.DecPadded(x, 2))
+      oled.Char_Literal (" ")
+      oled.Str (int.Dec(y))
+      oled.Position(x, y)
+      oled.Char($20)
+      oled.Char("-")
+      time.MSleep (50)
+'  oled.Char("-")
+
+PUB Setup
+
+  oled.start (SCL, SDA, RESET, I2C_HZ)
+
+  oled.SetInternalReg(FALSE)
+  oled.SetDisplayCursorBlink (FALSE, FALSE, FALSE)
+  oled.SetClockDivOscFreq(7, 0)
+  oled.SetFontCursorLineMode (FALSE, FALSE, TRUE)
+  oled.SetCharGenCharROM (%11{%00}, %01{%00})     'Changed from recommended initialization sequence
+  oled.SetBiDirection (1, 0)
+  oled.SetSEGPinCFG ({1}0, {0}1)                  'Changed from recommended initialization sequence
+  oled.SetVSLGPIO (0, 0)
+  oled.SetContrast ($7F)
+  oled.SetPhaseLength ($F, $1)
+  oled.SetVcomhDeselectLevel (4)
+  oled.Clear
+  oled.Position (0, 0)
+  oled.SetDisplayCursorBlink (TRUE, FALSE, FALSE)
+  time.MSleep (100)
+
+ 
 DAT
 
   line1 byte  "Parallax P8X32A     ", 0

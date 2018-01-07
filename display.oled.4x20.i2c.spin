@@ -17,11 +17,18 @@ CON
   SLAVE_WR      = SLAVE_ADDR | %0000_0000
   SLAVE_RD      = SLAVE_ADDR | %0000_0001
 
+  CR            = 10  'Carriage-return
+  NL            = 13  'Newline
+
 OBJ
 
   us2066: "core.con.us2066"
   time  : "time"
   i2c   : "jm_i2c_fast"
+
+VAR
+
+  byte  _dblht_mode
 
 PUB null
 ''This is not a top-level object
@@ -40,6 +47,58 @@ PUB stop
 
   i2c.terminate
 
+PUB Backspace | pos, col, row
+'' The display controller doesn't seem to handle Backspace by itself, so we have to implement it in software
+'' We query the controller for the current cursor position in DDRAM and write a space over the previous location.
+  pos := GetPos
+  case pos
+    $00..$13:
+      if pos > $00
+        Position(pos-1, 0)
+        Char_Literal ($20)
+        Position(pos-1, 0)
+      else
+        Position (0, 0)     'Limit to upper-left
+        Char_Literal ($20)
+        Position (0, 0)
+{        Position(19, 3)    'Wrap around to end of display
+        Char_Literal ($20)
+        Position(19, 3)
+}
+    $20..$33:
+      if pos > $20
+        Position(pos-1, 1)
+        Char_Literal ($20)
+        Position(pos-1, 1)
+      else
+        Position(19, 0)
+        Char_Literal ($20)
+        Position(19, 0)
+    $40..$53:
+      if pos > $40
+        Position(pos-1, 2)
+        Char_Literal ($20)
+        Position(pos-1, 2)
+      else
+        Position(19, 1)
+        Char_Literal ($20)
+        Position(19, 1)
+    $60..$73: row := 3
+      if pos == $73
+        Position (pos-2, 3)
+        Char_Literal ($20)
+        Position (pos-2, 3)
+      elseif pos > $60
+        Position (pos-1, 3)
+        Char_Literal ($20)
+        Position (pos-1, 3)
+      else
+        Position (19, 2)
+        Char_Literal ($20)
+        Position (19, 2)
+    OTHER: row := 0     'Not sure how else to handle this, atm
+
+
 PUB Char_Literal(ch)
 '' Display single character (pass data through without processing it first)
 
@@ -49,7 +108,11 @@ PUB Char(ch)
 '' Display single character. Display controller doesn't handle newline
 ''  on its own, so we have to implement one.
   case ch
-    10, 13:
+    8:
+      Backspace
+    10:
+      CarriageReturn
+    13:
       Newline
     OTHER:
       data(ch)
@@ -67,11 +130,24 @@ PUB ClearLine(line)
 
 PUB CMDSet_Extended
 '' Enable Extended command set
-  command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#EXT_REG_RE)
+'' We have to store the state of the double-height font setting on the host,
+''  otherwise, when switching back and forth between command sets, the setting
+''  gets lost.
+  if _dblht_mode
+    command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#DBLHT_FONT_EN | us2066#EXT_REG_RE)
+  else
+    command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#EXT_REG_RE)
 
 PUB CMDSet_Fundamental
 '' Enable Fundemental command set
-  command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4)
+'' We have to store the state of the double-height font setting on the host,
+''  otherwise, when switching back and forth between command sets, the setting
+''  gets lost.
+
+  if _dblht_mode
+    command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#DBLHT_FONT_EN)
+  else
+    command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4)
 
 PUB CMDSet_OLED(enabled)
 '' Enable OLED command set
@@ -79,7 +155,7 @@ PUB CMDSet_OLED(enabled)
   enabled := (||enabled <# 1)
   command(us2066#OLED_CHARACTERIZE | enabled)
 
-PUB CR | pos, row
+PUB CarriageReturn | pos, row
 '' Carriage-return / return to beginning of line
   pos := GetPos
   case pos
@@ -89,7 +165,6 @@ PUB CR | pos, row
     $60..$73: row := 3
     OTHER: row := 0     'Not sure how else to handle this, atm
   Position (0, row)
-
 
 PUB GetPos: addr | data_in
 '' Gets current position in DDRAM
@@ -214,30 +289,33 @@ PUB SetDisplayLines(lines)
 
 PUB SetDoubleHeight(mode)
 '' Set double-height font style mode
-'' 0: Standard height font all 4 lines
+'' 0: Standard height font all 4 lines / double-height disabled
 '' 1: Bottom two lines double-height (top 2 lines standard height, effectively 3 lines)
 '' 2: Middle two lines double-height (top and bottom lines standard height, effectively 3 lines)
 '' 3: Top and bottom lines double-height (effectively 2 lines)
 '' 4: Top line double-height (bottom 3 lines standard height, effectively 3 lines)
-
+'' Any other value will be treated the same as 0
+  _dblht_mode := mode
   CMDSet_Extended
-  case (mode)
+  command(us2066#EXTENDED_FUNCSET | us2066#NW_3_4_LINE)
+  case (_dblht_mode)
     0:
       CMDSet_Fundamental
-    1:
+    1: '0
       command(us2066#DBLHEIGHT | us2066#DBLHEIGHT_BOTTOM)
-      command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#DBLHT_FONT_EN)
-    2:
+      command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#DBLHT_FONT_EN)' | us2066#EXT_REG_RE)
+    2: '1
       command(us2066#DBLHEIGHT | us2066#DBLHEIGHT_MIDDLE)
-      command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#DBLHT_FONT_EN)
-    3:
+      command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#DBLHT_FONT_EN)' | us2066#EXT_REG_RE)
+    3: '2
       command(us2066#DBLHEIGHT | us2066#DBLHEIGHT_BOTH)
-      command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#DBLHT_FONT_EN)
-    4:
+      command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#DBLHT_FONT_EN)' | us2066#EXT_REG_RE)
+    4: '3
       command(us2066#DBLHEIGHT | us2066#DBLHEIGHT_TOP)
-      command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#DBLHT_FONT_EN)
+      command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#DBLHT_FONT_EN)' | us2066#EXT_REG_RE)
     OTHER:
       CMDSet_Fundamental
+'  CMDSet_Fundamental
 
 PUB SetFontCursorLineMode(fw_fontwidth, bw_cursor_inverting, nw_4line_dispmode)
 '' Set Font width (5 or 6 dots)
@@ -333,7 +411,6 @@ PUB Str(stringptr)
 '' Display zero-terminated string (use if you want to be able to use newline characters in the string)
   repeat strsize(stringptr)
     Char(byte[stringptr++])
-
 
 PUB Str_Literal(stringptr)
 '' Display zero-terminated string. Don't process input.

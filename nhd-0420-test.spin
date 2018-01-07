@@ -26,7 +26,7 @@ CON
 
 OBJ
 
-  cfg   : "config.flip"
+  cfg   : "core.con.client.flip"
   ser   : "com.serial.terminal"
   time  : "time"
   debug : "debug"
@@ -47,17 +47,19 @@ PUB Main | i, j, ackbit, data_in
   oled.SetDisplayCursorBlink (TRUE, TRUE, TRUE)
 
   repeat
-    repeat i from 1 to 4
-      oled.SetDisplayLines (i)
-      output1to4_test
-      time.Sleep (2)
+    oled.Char (ser.CharIn)
+'    oled.Position (0, 0)
+'    oled.Str ( int.Hex (ser.charin, 2)) 
+    
+  oled.Position (19, 3)
+  oled.Char_Literal ("E")
   debug.LEDFast (cfg#LED2)
 
 PUB cr_test
 
   oled.StrDelay (string("Testing 1 2 3 CR"), 50)
   time.Sleep (2)
-  oled.CR
+  oled.CarriageReturn
   time.Sleep (2)
   oled.Clear
 
