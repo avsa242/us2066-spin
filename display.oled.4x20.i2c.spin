@@ -289,33 +289,55 @@ PUB SetDisplayLines(lines)
 
 PUB SetDoubleHeight(mode)
 '' Set double-height font style mode
-'' 0: Standard height font all 4 lines / double-height disabled
-'' 1: Bottom two lines double-height (top 2 lines standard height, effectively 3 lines)
-'' 2: Middle two lines double-height (top and bottom lines standard height, effectively 3 lines)
-'' 3: Top and bottom lines double-height (effectively 2 lines)
-'' 4: Top line double-height (bottom 3 lines standard height, effectively 3 lines)
-'' Any other value will be treated the same as 0
+''  0: Standard height font all 4 lines / double-height disabled
+''  1: Bottom two lines form one double-height line (top 2 lines standard height, effectively 3 lines)
+''  2: Middle two lines form one double-height line (top and bottom lines standard height, effectively 3 lines)
+''  3: Top and bottom lines each form a double-height line (effectively 2 lines)
+''  4: Top two lines form one double-height line (bottom 3 lines standard height, effectively 3 lines)
+''  Any other value will be treated the same as 0
+'' *Takes effect immediately, i.e., current screen contents will change!
   _dblht_mode := mode
   CMDSet_Extended
   command(us2066#EXTENDED_FUNCSET | us2066#NW_3_4_LINE)
   case (_dblht_mode)
     0:
       CMDSet_Fundamental
-    1: '0
+    1:
       command(us2066#DBLHEIGHT | us2066#DBLHEIGHT_BOTTOM)
-      command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#DBLHT_FONT_EN)' | us2066#EXT_REG_RE)
-    2: '1
+      command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#DBLHT_FONT_EN)
+    2:
       command(us2066#DBLHEIGHT | us2066#DBLHEIGHT_MIDDLE)
-      command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#DBLHT_FONT_EN)' | us2066#EXT_REG_RE)
-    3: '2
+      command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#DBLHT_FONT_EN)
+    3:
       command(us2066#DBLHEIGHT | us2066#DBLHEIGHT_BOTH)
-      command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#DBLHT_FONT_EN)' | us2066#EXT_REG_RE)
-    4: '3
+      command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#DBLHT_FONT_EN)
+    4:
       command(us2066#DBLHEIGHT | us2066#DBLHEIGHT_TOP)
-      command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#DBLHT_FONT_EN)' | us2066#EXT_REG_RE)
+      command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#DBLHT_FONT_EN)
     OTHER:
       CMDSet_Fundamental
-'  CMDSet_Fundamental
+
+PUB SetFadeOut_Blinking(fade_blink_mode, interval)
+'' Set Fade Out and Blinking mode
+''  fade_blink_mode
+''    0: Disable fade out / blinking (RESET)
+''    1: Enable fade out (contrast fades out until display off, and stays off)
+''    2: Enable blink (contrast fades out until display off, then fades back on)
+''  interval - Time interval for each fade step
+''    %0000..%1111 = 8 frames..128 frames
+  case fade_blink_mode
+    0: fade_blink_mode := %00 << 4
+    1: fade_blink_mode := %10 << 4
+    2: fade_blink_mode := %11 << 4
+
+  interval := (||interval <# 15)
+
+  CMDSet_Extended
+  CMDSet_OLED (TRUE)
+  command(us2066#FADEOUT_BLINK)
+  command(fade_enable | blink_enable | interval)
+  CMDSet_OLED (FALSE)
+  CMDSet_Fundamental
 
 PUB SetFontCursorLineMode(fw_fontwidth, bw_cursor_inverting, nw_4line_dispmode)
 '' Set Font width (5 or 6 dots)
@@ -334,18 +356,16 @@ PUB SetFontCursorLineMode(fw_fontwidth, bw_cursor_inverting, nw_4line_dispmode)
 
 PUB SetInternalReg(enable)
 '' Enables the internal regulator (5V operation) if non-zero, disables it otherwise (low-voltage operation)
-
-    CMDSet_Extended
-    command(us2066#FUNCTION_SEL_A)
-    case enable
-      0:     data($00)
-      OTHER: data(us2066#INT_REG_ENABLE)
-    CMDSet_Fundamental
+  CMDSet_Extended
+  command(us2066#FUNCTION_SEL_A)
+  case enable
+    0:     data($00)
+    OTHER: data(us2066#INT_REG_ENABLE)
+  CMDSet_Fundamental
 
 PUB SetPhaseLength(phase2, phase1)
 '' Set length of phase 1 and 2 of segment waveform of the driver
 '' phase2:  1..15 (1 to 15 DCLK, 0 is invalid and ignored, POR=7)   phase1: 0..15 (0 to 32 DCLK)
-
   phase2  := (1#> ||phase2 <# 15) << 4
   phase1  := (||phase1 <# 15) << 1
 
@@ -361,7 +381,6 @@ PUB SetSEGPinCFG(seg_lr_remap, pin_cfg)
 '' NOTE: Only affects subsequent data input. Data already displayed/in DDRAM will be unchanged.
 '' seg_lr_remap:  %0: Disable SEG left/right remap  %1: Enable SEG left/right remap
 '' pin_cfg:       %0: Sequential SEG pin cfg        %1: Alternative (odd/even) SEG pin cfg
-
   seg_lr_remap  := (||seg_lr_remap <# 1) << 5
   pin_cfg       := (||pin_cfg <# 1) << 4
 
@@ -405,7 +424,6 @@ PUB SetVSLGPIO(vsl, gpio)
   command(vsl | gpio)
   CMDSet_OLED (FALSE)
   CMDSet_Fundamental
-
 
 PUB Str(stringptr)
 '' Display zero-terminated string (use if you want to be able to use newline characters in the string)

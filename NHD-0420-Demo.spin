@@ -48,10 +48,18 @@ PUB Main
   time.Sleep (4)
   oled.Clear
 
+  oled.SetDoubleHeight (0)
+
   Position_Demo
   time.Sleep (4)
   oled.Clear
-  
+
+  Cursor_demo
+  time.Sleep (4)
+  oled.Clear
+
+  oled.SetDoubleHeight (0)
+
   repeat
 
 PUB Contrast_Demo | i
@@ -71,10 +79,30 @@ PUB Count_Demo | i
 
   oled.Position (0, 0)
   oled.Str (string("Rapidly changing", oled#NL, "display contents", oled#NL, "(compare to LCD!)"))
-  repeat i from 0 to 5120
+  repeat i from 0 to 3000
     oled.Position (0, 3)
     oled.Str (string("i = "))
     oled.Str (int.Dec (i))
+
+PUB Cursor_demo | delay
+
+  delay := 50
+  oled.SetDisplayCursorBlink (1, 1, 0)
+  oled.StrDelay (string("Cursor: no blinking"), delay)
+  time.Sleep (3)
+  oled.Newline
+  oled.SetDisplayCursorBlink (1, 1, 1)
+  oled.StrDelay (string("Cursor: blinking"), delay)
+  time.Sleep (3)
+
+  oled.SetDoubleHeight (3)
+  oled.Clear
+  oled.SetDisplayCursorBlink (1, 1, 0)
+  oled.StrDelay (string("Cursor: no blinking"), delay)
+  time.Sleep (3)
+  oled.Newline
+  oled.SetDisplayCursorBlink (1, 1, 1)
+  oled.StrDelay (string("Cursor: blinking"), delay)
 
 PUB DoubleHeight_Demo | mode, line
 
@@ -112,13 +140,12 @@ PUB Position_Demo | x, y
       oled.Position(0, 0)
       oled.Str (string("Position "))
       oled.Str (int.DecPadded(x, 2))
-      oled.Char_Literal (" ")
+      oled.Char_Literal (",")
       oled.Str (int.Dec(y))
-      oled.Position(x, y)
+      oled.Position(x-1, y)
       oled.Char($20)
       oled.Char("-")
       time.MSleep (50)
-'  oled.Char("-")
 
 PUB Setup
 
@@ -143,10 +170,10 @@ PUB Setup
  
 DAT
 
-  line1 byte  "Parallax P8X32A     ", 0
-  line2 byte  "     on the         ", 0
-  line3 byte  "Newhaven Displays   ", 0
-  line4 byte  "NHD420 4x20 OLED    ", 0
+  line1 byte  "  Parallax P8X32A   ", 0
+  line2 byte  "       on the       ", 0
+  line3 byte  "  Newhaven Display  ", 0
+  line4 byte  "  NHD420 4x20 OLED  ", 0
 
 DAT
 {
