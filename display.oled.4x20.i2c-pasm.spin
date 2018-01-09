@@ -139,6 +139,16 @@ PUB CMDSet_Extended
   else
     command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#EXT_REG_RE)
 
+PUB CMDSet_Extended_IS
+'' Enable Extended command set
+'' We have to store the state of the double-height font setting on the host,
+''  otherwise, when switching back and forth between command sets, the setting
+''  gets lost.
+  if _dblht_mode
+    command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#DBLHT_FONT_EN | us2066#EXT_REG_RE | us2066#EXT_REG_IS)
+  else
+    command(us2066#FUNCTION_SET_0 | us2066#DISP_LINES_2_4 | us2066#EXT_REG_RE)
+
 PUB CMDSet_Fundamental
 '' Enable Fundemental command set
 '' We have to store the state of the double-height font setting on the host,
@@ -388,6 +398,21 @@ PUB SetSEGPinCFG(seg_lr_remap, pin_cfg)
   command(us2066#SET_SEG_PINS)
   command(seg_lr_remap | pin_cfg)
   CMDSet_OLED (FALSE)
+  CMDSet_Fundamental
+
+PUB SetScrollQty(pixels)
+
+  pixels := (||pixels <# 48)
+  CMDSet_Extended
+  command(us2066#SET_SCROLL_QTY | pixels)
+  CMDSet_Fundamental
+
+PUB SetShiftScroll(lines)
+'' Which lines to enable scrolling
+'' MSB: line 4 -> %0000 <- LSB: line 1
+  lines := (||lines <# 15)
+  CMDSet_Extended_IS
+  command(us2066#SHIFT_SCROLL_ENA | lines)
   CMDSet_Fundamental
 
 PUB SetVcomhDeselectLevel(level)

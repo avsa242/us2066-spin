@@ -44,13 +44,24 @@ PUB Main | i, j, ackbit, data_in
 
   ser.Str (string("Running..."))
   time.MSleep (500)
-  oled.SetDisplayCursorBlink (TRUE, TRUE, TRUE)
+  oled.SetDisplayCursorBlink (TRUE, FALSE, FALSE)
+  oled.SetDoubleHeight(0)
+'  output1to4_test
+  time.Sleep (1)
+  oled.SetShiftScroll (%1111)
 
   repeat
-    oled.Char(ser.CharIn)
-    ser.str(string("Position: "))
-    ser.hex(oled.GetPos, 2)
-    ser.newline
+    i++
+    if i > 48
+      i := 0
+    j++
+    oled.SetScrollQty (i)
+'    oled.Position (0, 0)
+    oled.Str (int.hex(j, 8))
+'    oled.Str (@text3)
+    time.MSleep (10)
+'  output1to4_test
+  repeat
 '    oled.Position(0, 0)
 '    oled.Str(int.Hex(ser.CharIn, 2))
 
