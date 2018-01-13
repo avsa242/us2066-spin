@@ -43,24 +43,26 @@ PUB Main | i, j, ackbit, data_in
   setup
 
   ser.Str (string("Running..."))
-  time.MSleep (500)
   oled.SetDisplayCursorBlink (TRUE, FALSE, FALSE)
-  oled.SetDoubleHeight(0)
-'  output1to4_test
-  time.Sleep (1)
-  oled.SetShiftScroll (%1111)
+  oled.SetDoubleHeight(3)
 
+'  oled.SetShiftScroll (%0000)
   repeat
-    i++
-    if i > 48
-      i := 0
-    j++
-    oled.SetScrollQty (i)
-'    oled.Position (0, 0)
-    oled.Str (int.hex(j, 8))
-'    oled.Str (@text3)
-    time.MSleep (10)
-'  output1to4_test
+    repeat i from 48 to 0
+      oled.SetScrollQty (i)
+      oled.Position (0, 0)
+      oled.Str (string("Scrolling"))
+      time.MSleep (30)
+{
+    oled.Clear
+
+    repeat i from 48 to 0
+      oled.SetScrollQty (i)
+      oled.Position (10, 0)
+      oled.Str (string("Scrolling"))
+      time.MSleep (30)
+    oled.Clear
+}
   repeat
 '    oled.Position(0, 0)
 '    oled.Str(int.Hex(ser.CharIn, 2))
