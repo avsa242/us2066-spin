@@ -13,13 +13,15 @@
 
 CON
 
-  SLAVE_ADDR    =              %0111_100 << 1    '($78) - Default slave address of NHD420/US2066
+  SLAVE_ADDR    =              %0111_100 << 1   '($78) - Default slave address of NHD420/US2066
   SLAVE_WR      = SLAVE_ADDR | %0000_0000
   SLAVE_RD      = SLAVE_ADDR | %0000_0001
 
   CR            = 10  'Carriage-return
   NL            = 13  'Newline
   SP            = 32  'Space
+
+  PASM          = TRUE                          ' Flag top-level objects can use to tell this is the PASM version
 
 OBJ
 
