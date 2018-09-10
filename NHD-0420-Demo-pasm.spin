@@ -1,183 +1,306 @@
 {
     --------------------------------------------
     Filename: NHD-0420-Demo.spin
-    Version: 0.2
+    Version: 0.3
+    Description: Demonstrates functionality of the
+     4x20 OLED Display object
     Author: Jesse Burt
     Copyright (c) 2018
     See end of file for terms of use.
     --------------------------------------------
 }
-
 CON
 
-  _clkmode = cfg#_clkmode
-  _xinfreq = cfg#_xinfreq
+    _clkmode  = cfg#_clkmode
+    _xinfreq  = cfg#_xinfreq
 
-  SCL       = 28
-  SDA       = 29
-  RESET     = 26
-  I2C_HZ    = 400_000
+    RESET     = 26        'I/O pin attached to display's RESET pin
+
+    DEMO_DELAY= 2         'Delay (sec) between different demos
+    MODE_DELAY= 1         'Delay (sec) between different modes within a particular demo
 
 OBJ
 
-  cfg   : "core.con.client.flip"
-  time  : "time"
-  oled  : "display.oled.4x20.i2c-pasm"
-  int   : "string.integer"
-
-VAR
-
+    cfg : "core.con.client.flip"
+    time: "time"
+    oled: "display.oled.4x20.i2c-pasm"
+    int : "string.integer"
+    ser : "com.serial.terminal"
 
 PUB Main
 
-  Setup
+    Setup
 
-  repeat
-    Greet_Demo
-    time.Sleep (4)
-    oled.Clear
+    repeat
+        Greet_Demo
+        time.Sleep (DEMO_DELAY)
+        oled.Clear
 
-    Count_Demo
-    time.Sleep (4)
-    oled.Clear
+        Count_Demo
+        time.Sleep (DEMO_DELAY)
+        oled.Clear
 
-    DoubleHeight_Demo
-    time.Sleep (4)
-    oled.Clear
+        DoubleHeight_Demo
+        time.Sleep (DEMO_DELAY)
+        oled.Clear
 
-    Contrast_Demo
-    time.Sleep (4)
-    oled.Clear
-    
-    oled.SetDoubleHeight (0)
+        Contrast_Demo
+        time.Sleep (DEMO_DELAY)
+        oled.Clear
 
-    Position_Demo
-    time.Sleep (4)
-    oled.Clear
+        Position_Demo
+        time.Sleep (DEMO_DELAY)
+        oled.Clear
 
-    Cursor_demo
-    time.Sleep (4)
-    oled.Clear
+        Cursor_demo
+        time.Sleep (DEMO_DELAY)
+        oled.Clear
 
-    oled.SetDoubleHeight (0)
-    oled.SetDisplayCursorBlink (TRUE, FALSE, FALSE)
-  repeat
+        Invert_demo
+        time.Sleep (DEMO_DELAY)
+        oled.Clear
+
+        FontWidth_Demo
+        time.Sleep (DEMO_DELAY)
+        oled.Clear
+
+        Mirror_Demo
+        time.Sleep (DEMO_DELAY)
+        oled.Clear
 
 PUB Contrast_Demo | i
 
-  oled.Position (0, 0)
-  oled.Str (string("Change contrast", oled#NL, "level:"))
-  oled.Newline
-  oled.SetDoubleHeight (1)
+    oled.Position (0, 0)
+    oled.Str (string("Change contrast", oled#NL, "level:"))
+    oled.Newline
+    oled.DoubleHeight (1)
 
-  repeat i from -255 to 255 step 1
-    oled.Position (0, 2)
-    oled.SetContrast (i)
-    oled.Str (int.DecPadded (||i, 3))
-    oled.Char_Literal (32)
-    oled.Str (int.Hex(||i, 2))
-    oled.Char_Literal (32)
-    oled.Str (int.Bin(||i, 8))
-    time.MSleep (10)
+    repeat i from -255 to 255 step 1
+        oled.Position (0, 2)
+        oled.Contrast (||i)
+        oled.Str (int.DecPadded (||i, 3))
+        oled.Char_Literal (32)
+        oled.Str (int.Hex(||i, 2))
+        oled.Char_Literal (32)
+        oled.Str (int.Bin(||i, 8))
+        time.MSleep (10)
+
+    oled.DoubleHeight (0)
 
 PUB Count_Demo | i
 
-  oled.Position (0, 0)
-  oled.Str (string("Rapidly changing", oled#NL, "display contents", oled#NL, "(compare to LCD!)"))
-  repeat i from 0 to 3000
-    oled.Position (0, 3)
-    oled.Str (string("i = "))
-    oled.Str (int.Dec (i))
+    oled.Position (0, 0)
+    oled.Str (string("Rapidly changing", oled#NL, "display contents", oled#NL, "(compare to LCD!)", oled#NL, "i = "))
 
-PUB Cursor_demo | delay
+    repeat i from 0 to 3000
+        oled.Position (4, 3)
+        oled.Str (int.Dec (i))
 
-  delay := 50
-  oled.SetDisplayCursorBlink (1, 1, 0)
-  oled.StrDelay (string("Cursor: no blinking"), delay)
-  time.Sleep (3)
-  oled.Newline
-  oled.SetDisplayCursorBlink (1, 1, 1)
-  oled.StrDelay (string("Cursor: blinking"), delay)
-  time.Sleep (3)
+PUB Cursor_demo | delay, dbl_mode
 
-  oled.SetDoubleHeight (3)
-  oled.Clear
-  oled.SetDisplayCursorBlink (1, 1, 0)
-  oled.StrDelay (string("Cursor: no blinking"), delay)
-  time.Sleep (3)
-  oled.Newline
-  oled.SetDisplayCursorBlink (1, 1, 1)
-  oled.StrDelay (string("Cursor: blinking"), delay)
+    delay := 25
+    repeat dbl_mode from 0 to 2 step 2
+        oled.Clear
+        oled.DoubleHeight (dbl_mode)
+        oled.SetCursor (0)
+        oled.Position (0, 0)
+        oled.StrDelay (string("Cursor:"), delay)
+
+        oled.Position (0, 1)
+        oled.StrDelay (string("None            (0)"), delay)
+        time.Sleep (2)
+        oled.ClearLine (1)
+
+        oled.SetCursor (1)
+        oled.Position (0, 1)
+        oled.StrDelay (string("Block/blink     (1)"), delay)
+        time.Sleep (2)
+        oled.ClearLine (1)
+
+        oled.SetCursor (2)
+        oled.Position (0, 1)
+        oled.StrDelay (string("Underscore      (2)"), delay)
+        time.Sleep (2)
+        oled.ClearLine (1)
+
+        oled.SetCursor (3)
+        oled.Position (0, 1)
+        oled.StrDelay (string("Underscore/blink(3)"), delay)
+        time.Sleep (2)
+
+    oled.DoubleHeight (0)
+    oled.SetCursor (0)
 
 PUB DoubleHeight_Demo | mode, line
 
-  repeat mode from 0 to 4
-    oled.SetDoubleHeight (mode)
-    oled.Position (14, 0)
-    oled.Str (string("Mode "))
-    oled.Str (int.Dec(mode))
-    repeat line from 0 to 3
-      oled.Position (0, line)
-      oled.Str (string("Double-height"))
-    time.Sleep (1)
+    repeat mode from 0 to 4
+        oled.DoubleHeight (mode)
+        oled.Position (14, 0)
+        oled.Str (string("Mode "))
+        oled.Str (int.Dec(mode))
+        repeat line from 0 to 3
+            oled.Position (0, line)
+            oled.Str (string("Double-height"))
+        time.Sleep (MODE_DELAY)
+
+PUB FontWidth_demo | px, dbl_mode
+
+    oled.Clear
+    oled.Str (string("Font width..."))
+    oled.Position (2, 1)
+    oled.Str (string("pixels"))
+
+    repeat dbl_mode from 0 to 2 step 2
+        oled.DoubleHeight (dbl_mode)
+        repeat 2
+            repeat px from 6 to 5
+                oled.Position (0, 1)
+                oled.FontWidth (px)
+                oled.Str (int.Dec (px))
+                time.Sleep (MODE_DELAY)
+
+    oled.FontWidth (5)
+    oled.DoubleHeight (0)
 
 PUB Greet_Demo
 
-  oled.Position (0, 0)
-  oled.Str (@line1)
-  time.Sleep (1)
-  
-  oled.Position (0, 1)
-  oled.Str (@line2)
-  time.Sleep (1)
-  
-  oled.Position (0, 2)
-  oled.Str (@line3)
-  time.Sleep (1)
-  
-  oled.Position (0, 3)
-  oled.Str (@line4)
+    oled.Position (0, 0)
+    oled.Str (@line1)
+    time.Sleep (1)
+
+    oled.Position (0, 1)
+    oled.Str (@line2)
+    time.Sleep (1)
+
+    oled.Position (0, 2)
+    oled.Str (@line3)
+    time.Sleep (1)
+
+    oled.Position (0, 3)
+    oled.Str (@line4)
+
+    time.Sleep (1)
+
+PUB Invert_demo | i
+
+    oled.Clear
+    oled.DoubleHeight (1)
+    oled.Position (0, 0)
+    oled.Str (string("Display..."))
+
+    repeat i from 1 to 3
+        oled.InvertDisplay (TRUE)
+        oled.Position (0, 2)
+        oled.Str (string("INVERTED"))
+        time.Sleep (MODE_DELAY)
+        oled.InvertDisplay (FALSE)
+        oled.Position (0, 2)
+        oled.Str (string("NORMAL  "))
+        time.Sleep (MODE_DELAY)
+
+    oled.DoubleHeight (0)
+
+PUB Mirror_Demo | i
+
+    oled.Clear
+    oled.DoubleHeight (2)
+    oled.Str (string("Mirror..."))
+
+    oled.MirrorH (FALSE)
+    oled.MirrorV (FALSE)
+    oled.ClearLine (1)
+    oled.Position (0, 1)
+    oled.Str (string("OFF"))
+    time.Sleep (2)
+
+    oled.MirrorH (TRUE)
+    oled.MirrorV (FALSE)
+    oled.ClearLine (1)
+    oled.Position (0, 1)
+    oled.Str (string("HORIZONTAL"))
+    time.Sleep (2)
+
+    oled.MirrorH (FALSE)
+    oled.MirrorV (TRUE)
+    oled.ClearLine (1)
+    oled.Position (0, 1)
+    oled.Str (string("VERTICAL"))
+    time.Sleep (2)
+
+    oled.MirrorH (TRUE)
+    oled.MirrorV (TRUE)
+    oled.ClearLine (1)
+    oled.Position (0, 1)
+    oled.Str (string("BOTH"))
+    time.Sleep (2)
+
+    oled.Clear
+    oled.MirrorH (FALSE)
+    oled.MirrorV (FALSE)
+    oled.DoubleHeight (0)
 
 PUB Position_Demo | x, y
-  
-  repeat y from 0 to 3
-    repeat x from 0 to 19
-      oled.Position(0, 0)
-      oled.Str (string("Position "))
-      oled.Str (int.DecPadded(x, 2))
-      oled.Char_Literal (",")
-      oled.Str (int.Dec(y))
-      oled.Position(x-1, y)
-      oled.Char($20)
-      oled.Char("-")
-      time.MSleep (50)
+
+    repeat y from 0 to 3
+        repeat x from 0 to 19
+            oled.Position(0, 0)
+            oled.Str (string("Position "))
+            oled.Str (int.DecPadded(x, 2))
+            oled.Char_Literal (",")
+            oled.Str (int.Dec(y))
+            oled.Position((x-1 #> 0), y)
+            oled.Char($20)
+            oled.Char("-")
+            time.MSleep (25)
 
 PUB Setup
 
-  oled.start (SCL, SDA, RESET, I2C_HZ)
+    repeat until ser.Start (115_200)
+    ser.Clear
+    ser.Str (string("Serial terminal started", ser#NL))
+    if oled.Start (RESET)                               'Change RESET CONstant at the top of this file to match your connection
+'    if oled.Startx (scl, sda, resetpin, hz, slave_bit) 'Alternatively, Use this line instead of the above to use all custom settings
+        ser.Str (string("us2066 object started", ser#NL))
+    else
+        ser.Str (string("us2066 object failed to start", ser#NL))
+        oled.stop
+        ser.Stop
+        repeat
 
-  oled.SetInternalReg(FALSE)
-  oled.SetDisplayCursorBlink (FALSE, FALSE, FALSE)
-  oled.SetClockDivOscFreq(7, 0)
-  oled.SetFontCursorLineMode (FALSE, FALSE, TRUE)
-  oled.SetCharGenCharROM (%11{%00}, %01{%00})     'Changed from recommended initialization sequence
-  oled.SetBiDirection (1, 0)
-  oled.SetSEGPinCFG ({1}0, {0}1)                  'Changed from recommended initialization sequence
-  oled.SetVSLGPIO (0, 0)
-  oled.SetContrast ($7F)
-  oled.SetPhaseLength ($F, $1)
-  oled.SetVcomhDeselectLevel (4)
-  oled.Clear
-  oled.Position (0, 0)
-  oled.SetDisplayCursorBlink (TRUE, FALSE, FALSE)
-  time.MSleep (100)
- 
+    oled.Start (RESET)
+    oled.Defaults
+'' Set up the OLED display with some sane defaults
+    oled.EnableInternalReg (FALSE)
+    oled.EnableDisplay (FALSE)
+    oled.SetCursor (FALSE)
+    oled.CursorBlink (FALSE)
+    oled.SetupOsc (7, 1)
+    oled.FontWidth (5)
+    oled.CursorInvert (FALSE)
+    oled.DisplayLines (4)
+    oled.CharGen (240)
+    oled.CharROM (0)
+    oled.MirrorH (FALSE)
+    oled.MirrorV (FALSE)
+    oled.TextDirection (0)
+    oled.PinCfg (0)
+    oled.EnableExtVSL (0)
+    oled.GPIOState (0)
+    oled.Contrast ($7F)
+    oled.Phs1Period (2)
+    oled.Phs2Period (15)
+    oled.VcomhDeselectLev (4)
+    oled.Clear
+    oled.Position (0, 0)
+    oled.EnableDisplay (TRUE)
+    time.MSleep (100)
+
 DAT
-
-  line1 byte  "  Parallax P8X32A   ", 0
-  line2 byte  "       on the       ", 0
-  line3 byte  "  Newhaven Display  ", 0
-  line4 byte  "  NHD420 4x20 OLED  ", 0
+'                0|    |    |    |   |19
+    line1 byte{0}"  Parallax P8X32A   ", 0
+    line2 byte{1}"       on the       ", 0
+    line3 byte{2}"  Newhaven Display  ", 0
+    line4 byte{3}"  NHD420 4x20 OLED  ", 0
 
 DAT
 {
