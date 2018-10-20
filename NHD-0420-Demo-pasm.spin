@@ -14,7 +14,7 @@ CON
     _clkmode  = cfg#_clkmode
     _xinfreq  = cfg#_xinfreq
 
-    RESET     = 26        'I/O pin attached to display's RESET pin
+    RESET     = 25        'I/O pin attached to display's RESET pin
 
     DEMO_DELAY= 2         'Delay (sec) between different demos
     MODE_DELAY= 1         'Delay (sec) between different modes within a particular demo
