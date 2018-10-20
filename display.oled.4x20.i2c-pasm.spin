@@ -5,6 +5,8 @@
     Description: I2C driver for US2066-based OLED
      alphanumeric displays
     Copyright (c) 2018
+    Created Dec 30, 2017
+    Updated Oct 20, 2018
     See end of file for terms of use.
     --------------------------------------------
 }

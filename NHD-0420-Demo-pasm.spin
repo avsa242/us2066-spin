@@ -1,11 +1,12 @@
 {
     --------------------------------------------
     Filename: NHD-0420-Demo.spin
-    Version: 0.3
     Description: Demonstrates functionality of the
      4x20 OLED Display object
     Author: Jesse Burt
     Copyright (c) 2018
+    Created Dec 30, 2017
+    Updated Oct 20, 2018
     See end of file for terms of use.
     --------------------------------------------
 }
