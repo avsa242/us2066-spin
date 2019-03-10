@@ -705,7 +705,7 @@ PUB SetupOsc(frequency, divisor)
         1..16: _divisor := divisor - 1
         OTHER: return
 
-    cmd8_OLED (core#DISP_CLKDIV_OSC, _frequency | _divisor)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_OLED, core#DISP_CLKDIV_OSC, _frequency | _divisor)
 
 PUB Str(stringptr)
 '' Display zero-terminated string (use if you want to be able to use newline characters in the string)
