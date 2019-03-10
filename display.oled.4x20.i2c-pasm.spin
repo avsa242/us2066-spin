@@ -478,7 +478,7 @@ PUB EnableExtVSL(enabled)
         0: _ext_vsl := core#VSL_INTERNAL
         OTHER: return
 
-    cmd8_OLED ( core#FUNCTION_SEL_C, _ext_vsl | _gpio_state)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_OLED, core#FUNCTION_SEL_C, _ext_vsl | _gpio_state)
 
 PUB EnableInternalReg(enable)
 '' Internal regulator setting
