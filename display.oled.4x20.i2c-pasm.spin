@@ -309,7 +309,7 @@ PUB CharROM(char_set)
         2: _char_set := core#CHAR_ROM_C
         OTHER: return
 
-    cmd8_Ext (core#FUNCTION_SEL_B, _char_predef | _char_set)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_EXTD, core#FUNCTION_SEL_B, _char_predef | _char_set)
 
 PUB Clear
 '' Clear display
