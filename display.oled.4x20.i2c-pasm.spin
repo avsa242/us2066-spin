@@ -690,7 +690,7 @@ PUB Cursor(type)
             _blink_en := core#BLINK_ON
         OTHER: return
 
-    cmd_Fund (core#DISPLAY_ONOFF | _disp_en | _cursor_en | _blink_en)
+    writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, core#DISPLAY_ONOFF | _disp_en | _cursor_en | _blink_en, 0)
     CursorInvert (_cursor_invert >> 1)
 
 PUB SetupOsc(frequency, divisor)
