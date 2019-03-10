@@ -501,7 +501,7 @@ PUB FontWidth(dots)
         6: _fontwidth := core#FONTWIDTH_6
         OTHER: return
 
-    cmd_Ext (core#EXTENDED_FUNCSET | _fontwidth | _cursor_invert | _disp_lines_NW, 0)
+    writeRegX (TRANSTYPE_CMD, 0, CMDSET_EXTD, core#EXTENDED_FUNCSET | _fontwidth | _cursor_invert | _disp_lines_NW, 0)
 
 PUB GetPos: addr | data_in
 '' Gets current position in DDRAM
