@@ -550,7 +550,7 @@ PUB MirrorH(enable)
         1: _mirror_h := core#SEG0_99
         OTHER: return
 
-    cmd_Ext (core#ENTRY_MODE_SET | _mirror_h | _mirror_v, 0)
+    writeRegX (TRANSTYPE_CMD, 0, CMDSET_EXTD, core#ENTRY_MODE_SET | _mirror_h | _mirror_v, 0)
 
 PUB MirrorV(enable)
 '' Mirror display, vertically
