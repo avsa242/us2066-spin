@@ -606,7 +606,7 @@ PUB Phs1Period(clocks)
         2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32: _phs1_per := (clocks >> 1) - 1
         OTHER: return
 
-    cmd8_OLED (core#SET_PHASE_LEN, _phs2_per | _phs1_per)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_OLED, core#SET_PHASE_LEN, _phs2_per | _phs1_per)
 
 PUB Phs2Period(clocks)
 '' Set length of phase 2 of segment waveform of the driver
