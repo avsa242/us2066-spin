@@ -528,7 +528,7 @@ PUB GPIOState(state)
 
 PUB Home
 '' Returns cursor to home position (0, 0), without clearing the display
-    writeRegX (TRANSTYPE_CMD, 1, CMDSET_FUND, core#HOME_DISPLAY, 0)
+    writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, core#HOME_DISPLAY, 0)
 
 PUB InvertDisplay(enable)
 '' Enable/disable inverted display
@@ -541,7 +541,7 @@ PUB InvertDisplay(enable)
         0: _disp_invert := core#NORMAL_DISPLAY
         OTHER: return
 
-    cmd_Ext (core#FUNCTION_SET_1 | _cgram_blink | _disp_invert , 0)
+    writeRegX (TRANSTYPE_CMD, 0, CMDSET_EXTD, core#FUNCTION_SET_1 | _cgram_blink | _disp_invert, 0)
 
 PUB MirrorH(enable)
 '' Mirror display, horizontally
