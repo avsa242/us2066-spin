@@ -559,7 +559,7 @@ PUB MirrorV(enable)
         1: _mirror_v := core#COM31_0
         OTHER: return
 
-    cmd_Ext (core#ENTRY_MODE_SET | _mirror_h | _mirror_v, 0)
+    writeRegX (TRANSTYPE_CMD, 0, CMDSET_EXTD, core#ENTRY_MODE_SET | _mirror_h | _mirror_v, 0)
 
 PUB Newline: row | pos
 '' Query the controller for the current cursor position in DDRAM and increment the row (wrapping to row 0)
