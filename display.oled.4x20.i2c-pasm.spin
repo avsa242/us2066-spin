@@ -371,7 +371,7 @@ PUB DisplayBlink(delay)
         8,16,24,32,40,48,56,64,72,80,88,96,104,112,120,128: _fadeblink := (core#BLINK_ENA | ((delay / 8) - 1))
         OTHER: return
 
-    cmd8_OLED (core#FADEOUT_BLINK, _fadeblink)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_OLED, core#FADEOUT_BLINK, _fadeblink)
 
 PUB DisplayFade(delay)
 '' Gradually fade out display (just once)
