@@ -627,7 +627,7 @@ PUB Position(column, row) | offset
                 OTHER: return
         OTHER: return
 
-    cmd_Fund (core#SET_DDRAM_ADDR|offset)
+    writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, core#SET_DDRAM_ADDR|offset, 0)
 
 PUB GotoXY(column, line) | offset
 '' Alias for Position
