@@ -430,7 +430,7 @@ PUB DoubleHeight(mode) | cmd_packet
         0:
             _dblht_mode := 0
             _dblht_en := 0
-            cmd_Ext (core#FUNCTION_SET_0 | core#DISP_LINES_2_4 | core#DBLHT_FONT_DIS, 0)
+            writeRegX (TRANSTYPE_CMD, 1, CMDSET_EXTD, core#FUNCTION_SET_0 | core#DISP_LINES_2_4 | core#DBLHT_FONT_DIS, 0)
             return
         1: _dblht_mode := core#DBLHEIGHT_BOTTOM
         2: _dblht_mode := core#DBLHEIGHT_MIDDLE
@@ -440,7 +440,7 @@ PUB DoubleHeight(mode) | cmd_packet
 
     _dblht_en := core#DBLHT_FONT_EN
 
-    cmd_Ext (core#DBLHEIGHT | _dblht_mode, 0)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_EXTD, core#DBLHEIGHT | _dblht_mode, 0)
 
 PUB EnableBacklight(enable)
 '' Alias for EnableDisplay
