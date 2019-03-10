@@ -28,9 +28,11 @@ CON
 
     TRANSTYPE_CMD   = 0
     TRANSTYPE_DATA  = 1
+
     CMDSET_FUND     = 0
     CMDSET_EXTD     = 1
-    CMDSET_OLED     = 2
+    CMDSET_EXTD_IS  = 2
+    CMDSET_OLED     = 3
 
     CR              = 10  'Carriage-return
     NL              = 13  'Newline
@@ -217,7 +219,8 @@ PUB Backspace | pos, col, row
 
 PUB Busy | flag
 '' Returns Busy Flag (bit 7 of $00)
-    cmd_Fund ($00)
+'    cmd_Fund ($00)
+    writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, $00, 0)'(trans_type, nr_bytes, cmd_set, cmd, val)
     i2c.start
     i2c.write (SLAVE_RD | _sa0_addr)
     flag := i2c.read (TRUE)
@@ -503,7 +506,8 @@ PUB FontWidth(dots)
 
 PUB GetPos: addr | data_in
 '' Gets current position in DDRAM
-    cmd_Fund ($00)
+'    cmd_Fund ($00)
+    writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, $00, 0)'(trans_type, nr_bytes, cmd_set, cmd, val)
     i2c.start
     i2c.write (SLAVE_RD | _sa0_addr)
     addr := i2c.read (TRUE)
@@ -576,7 +580,9 @@ PUB PartID: pid
 '' Gets Part ID
 '' *** US2066 Datasheet p.39 says this should return %0100001 ($21),
 ''     but it seems to return %0000001 ($01)
-    cmd_Fund ($00)
+'    cmd_Fund ($00)
+    writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, $00, 0)'(trans_type, nr_bytes, cmd_set, cmd, val)
+
     i2c.start
     i2c.write (SLAVE_RD | _sa0_addr)
     i2c.read (FALSE)          'First read gets the address counter register - throw it away
@@ -762,7 +768,7 @@ PRI cmd_Ext(cmd, extReg_IS) | cmd_packet[2]
     cmd_packet.byte[5] := core#CTRLBYTE_CMD
     cmd_packet.byte[6] := (core#CMDSET_FUNDAMENTAL | _disp_lines_N | _dblht_en)
 
-    WriteX (@cmd_packet, 7)
+'    WriteX (@cmd_packet, 7)
 
 PRI cmd8_Ext(cmd, val) | cmd_packet[3]
 '' Access Extended Command Set
@@ -777,7 +783,7 @@ PRI cmd8_Ext(cmd, val) | cmd_packet[3]
     cmd_packet.byte[7] := core#CTRLBYTE_CMD
     cmd_packet.byte[8] := core#CMDSET_FUNDAMENTAL | _disp_lines_N | _dblht_en
 
-    WriteX (@cmd_packet, 9)
+'    WriteX (@cmd_packet, 9)
 
 PRI cmd8_OLED(cmd, val) | cmd_packet[4]
 '' Access OLED Characterization Command Set
@@ -796,21 +802,21 @@ PRI cmd8_OLED(cmd, val) | cmd_packet[4]
     cmd_packet.byte[11] := core#CTRLBYTE_CMD
     cmd_packet.byte[12] := core#CMDSET_FUNDAMENTAL | _disp_lines_N | _dblht_en
 
-    WriteX (@cmd_packet, 13)
+'    WriteX (@cmd_packet, 13)
 
 PRI cmd_Fund(cmd) | ackbit, cmd_packet
 '' Fundamental Command Set
     cmd_packet := (cmd << 16) | (CMD_HDR | _sa0_addr)
-    WriteX (@cmd_packet, 3)
+'    WriteX (@cmd_packet, 3)
 
 PRI wrdata(databyte) | cmd_packet
 '' Write bytes with the DATA control byte set
-    cmd_packet.byte[0] := SLAVE_ADDR | _sa0_addr
+    cmd_packet.byte[0] := SLAVE_WR | _sa0_addr
     cmd_packet.byte[1] := core#CTRLBYTE_DATA
     cmd_packet.byte[2] := databyte
 
     i2c.start
-    i2c.pwrite (@cmd_packet, 3)
+    i2c.wr_block (@cmd_packet, 3)
     i2c.stop
   
 {PRI readX(ptr_buff, num_bytes)
@@ -839,7 +845,7 @@ PUB readRegX(reg, bytes, dest) | cmd_packet
     case bytes
         1:
 '            writeRegX (reg, 0, 0)
-            writeRegX (trans_type, nr_bytes, cmd_set, cmd, val)
+'            writeRegX (trans_type, nr_bytes, cmd_set, cmd, val)
         OTHER:
             return
 
@@ -865,7 +871,29 @@ PUB writeRegX(trans_type, nr_bytes, cmd_set, cmd, val) | cmd_packet[2]
                 CMDSET_EXTD:
                     case nr_bytes
                         1:
-                            cmd_packet.byte[2] := core#CMDSET_EXTENDED | _disp_lines_N | _dblht_en | extReg_IS
+                            cmd_packet.byte[2] := core#CMDSET_EXTENDED | _disp_lines_N | _dblht_en
+                            cmd_packet.byte[3] := core#CTRLBYTE_CMD
+                            cmd_packet.byte[4] := cmd
+                            cmd_packet.byte[5] := core#CTRLBYTE_CMD
+                            cmd_packet.byte[6] := core#CMDSET_FUNDAMENTAL | _disp_lines_N | _dblht_en
+                            nr_bytes := 7
+
+                        2:
+                            cmd_packet.byte[2] := core#CMDSET_EXTENDED | _disp_lines_N | _dblht_en
+                            cmd_packet.byte[3] := core#CTRLBYTE_CMD
+                            cmd_packet.byte[4] := cmd
+                            cmd_packet.byte[5] := core#CTRLBYTE_DATA
+                            cmd_packet.byte[6] := val
+                            cmd_packet.byte[7] := core#CTRLBYTE_CMD
+                            cmd_packet.byte[8] := core#CMDSET_FUNDAMENTAL | _disp_lines_N | _dblht_en
+                            nr_bytes := 9
+                        OTHER:
+                            return
+
+                CMDSET_EXTD_IS:
+                    case nr_bytes
+                        1:
+                            cmd_packet.byte[2] := core#CMDSET_EXTENDED | _disp_lines_N | _dblht_en | %1{IS = 1}
                             cmd_packet.byte[3] := core#CTRLBYTE_CMD
                             cmd_packet.byte[4] := cmd
                             cmd_packet.byte[5] := core#CTRLBYTE_CMD
@@ -899,9 +927,9 @@ PUB writeRegX(trans_type, nr_bytes, cmd_set, cmd, val) | cmd_packet[2]
                     nr_bytes := 13
 
         TRANSTYPE_DATA:
-            cmd_packet.byte[0] := SLAVE_ADDR | _sa0_addr
+            cmd_packet.byte[0] := SLAVE_WR | _sa0_addr
             cmd_packet.byte[1] := core#CTRLBYTE_DATA
-            cmd_packet.byte[2] := databyte
+            cmd_packet.byte[2] := val
             nr_bytes := 3
 
     i2c.start
