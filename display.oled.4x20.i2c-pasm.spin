@@ -313,11 +313,11 @@ PUB CharROM(char_set)
 
 PUB Clear
 '' Clear display
-    cmd_Fund (core#CLEAR_DISPLAY)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_FUND, core#CLEAR_DISPLAY, 0)
 
 PUB CLS
 '' Alias for Clear
-    cmd_Fund (core#CLEAR_DISPLAY)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_FUND, core#CLEAR_DISPLAY, 0)
 
 PUB ClearLine(line)
 '' Clear 'line'
