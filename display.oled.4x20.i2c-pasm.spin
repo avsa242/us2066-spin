@@ -597,7 +597,7 @@ PUB PinCfg(cfg)
         1: _seg_pincfg := core#ALT_SEGPINCFG
         OTHER: return
 
-    cmd8_OLED (core#SET_SEG_PINS, _seg_remap | _seg_pincfg)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_OLED, core#SET_SEG_PINS, _seg_remap | _seg_pincfg)
 
 PUB Phs1Period(clocks)
 '' Set length of phase 1 of segment waveform of the driver
