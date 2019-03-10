@@ -524,7 +524,7 @@ PUB GPIOState(state)
         3: _gpio_state := core#GPIO_OUT_HIGH
         OTHER: return
 
-    cmd8_OLED (core#FUNCTION_SEL_C, _ext_vsl | _gpio_state)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_OLED, core#FUNCTION_SEL_C, _ext_vsl | _gpio_state)
 
 PUB Home
 '' Returns cursor to home position (0, 0), without clearing the display
