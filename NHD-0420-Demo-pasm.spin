@@ -6,7 +6,7 @@
     Author: Jesse Burt
     Copyright (c) 2018
     Created Dec 30, 2017
-    Updated Oct 20, 2018
+    Updated Mar 10, 2019
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -22,7 +22,7 @@ CON
 
 OBJ
 
-    cfg : "core.con.client.flip"
+    cfg : "core.con.boardcfg.flip"
     time: "time"
     oled: "display.oled.4x20.i2c-pasm"
     int : "string.integer"

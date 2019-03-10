@@ -6,14 +6,13 @@
      alphanumeric displays
     Copyright (c) 2018
     Created Dec 30, 2017
-    Updated Oct 20, 2018
+    Updated Mar 10, 2019
     See end of file for terms of use.
     --------------------------------------------
 }
 
 CON
 '' I2C Defaults
-    SLAVE_ADDR      = core#SLAVE_ADDR
     SLAVE_WR        = core#SLAVE_ADDR
     SLAVE_RD        = SLAVE_WR|1
     R               = %1
@@ -26,6 +25,12 @@ CON
 '' Build some basic headers for I2C transactions
     CMD_HDR         = ((core#CTRLBYTE_CMD << 8) | SLAVE_WR)
     DAT_HDR         = ((core#CTRLBYTE_DATA << 8) | SLAVE_WR)
+
+    TRANSTYPE_CMD   = 0
+    TRANSTYPE_DATA  = 1
+    CMDSET_FUND     = 0
+    CMDSET_EXTD     = 1
+    CMDSET_OLED     = 2
 
     CR              = 10  'Carriage-return
     NL              = 13  'Newline
@@ -76,7 +81,7 @@ VAR
 
 OBJ
 
-    i2c     : "jm_i2c_fast"
+    i2c     : "com.i2c"
     core    : "core.con.us2066"
     time    : "time"
 
@@ -107,7 +112,7 @@ PUB Startx(SCL_PIN, SDA_PIN, RESET_PIN, I2C_HZ, SLAVE_BIT): okay
                             return FALSE
                 Reset
                 Defaults
-                if Ping
+                if i2c.present (SLAVE_WR)
                     return okay
     return FALSE                                                'If we got here, something went wrong
 
@@ -115,13 +120,6 @@ PUB Stop
 '' Turn the display visibility off and stop the I2C cog
     EnableDisplay (FALSE)
     i2c.terminate
-
-PUB Ping
-
-    i2c.start
-    result := i2c.write (SLAVE_ADDR | _sa0_addr)
-    i2c.stop
-    return !result
 
 PUB finalize
 '' Alias for Stop
@@ -221,7 +219,7 @@ PUB Busy | flag
 '' Returns Busy Flag (bit 7 of $00)
     cmd_Fund ($00)
     i2c.start
-    i2c.write (SLAVE_ADDR | _sa0_addr | R)
+    i2c.write (SLAVE_RD | _sa0_addr)
     flag := i2c.read (TRUE)
     i2c.stop
 
@@ -507,7 +505,7 @@ PUB GetPos: addr | data_in
 '' Gets current position in DDRAM
     cmd_Fund ($00)
     i2c.start
-    i2c.write (SLAVE_ADDR | _sa0_addr | R)
+    i2c.write (SLAVE_RD | _sa0_addr)
     addr := i2c.read (TRUE)
     i2c.stop
 
@@ -580,7 +578,7 @@ PUB PartID: pid
 ''     but it seems to return %0000001 ($01)
     cmd_Fund ($00)
     i2c.start
-    i2c.write (SLAVE_ADDR | _sa0_addr | R)
+    i2c.write (SLAVE_RD | _sa0_addr)
     i2c.read (FALSE)          'First read gets the address counter register - throw it away
     pid := i2c.read (TRUE)    'Second read gets the Part ID
     i2c.stop
@@ -815,17 +813,99 @@ PRI wrdata(databyte) | cmd_packet
     i2c.pwrite (@cmd_packet, 3)
     i2c.stop
   
-PRI readX(ptr_buff, num_bytes)
+{PRI readX(ptr_buff, num_bytes)
 '' Read num_bytes from the bus into ptr_buff
     i2c.start
     i2c.write (SLAVE_ADDR | _sa0_addr | R)
     i2c.pread (ptr_buff, num_bytes, TRUE)
     i2c.stop
-
-PRI WriteX(ptr_buff, num_bytes)
+}
+{PRI WriteX(ptr_buff, num_bytes)
 '' Write num_bytes from ptr_buff to the bus
     i2c.start
     i2c.pwrite (ptr_buff, num_bytes)
+    i2c.stop
+}
+PUB readRegX(reg, bytes, dest) | cmd_packet
+
+    case reg
+        0:
+            i2c.start
+            i2c.write (SLAVE_RD | _sa0_addr)
+            result := i2c.read (TRUE)
+            i2c.stop
+            return
+
+    case bytes
+        1:
+'            writeRegX (reg, 0, 0)
+            writeRegX (trans_type, nr_bytes, cmd_set, cmd, val)
+        OTHER:
+            return
+
+    i2c.start
+    i2c.wr_block (@cmd_packet, 2)
+
+    i2c.start
+    i2c.write (SLAVE_RD)
+    i2c.rd_block (dest, bytes, TRUE)
+    i2c.stop
+
+PUB writeRegX(trans_type, nr_bytes, cmd_set, cmd, val) | cmd_packet[2]
+
+    case trans_type
+        TRANSTYPE_CMD:
+            cmd_packet.byte[0] := CMD_HDR | _sa0_addr
+
+            case cmd_set
+                CMDSET_FUND:
+                    cmd_packet.byte[2] := cmd
+                    nr_bytes := 3
+
+                CMDSET_EXTD:
+                    case nr_bytes
+                        1:
+                            cmd_packet.byte[2] := core#CMDSET_EXTENDED | _disp_lines_N | _dblht_en | extReg_IS
+                            cmd_packet.byte[3] := core#CTRLBYTE_CMD
+                            cmd_packet.byte[4] := cmd
+                            cmd_packet.byte[5] := core#CTRLBYTE_CMD
+                            cmd_packet.byte[6] := core#CMDSET_FUNDAMENTAL | _disp_lines_N | _dblht_en
+                            nr_bytes := 7
+
+                        2:
+                            cmd_packet.byte[2] := core#CMDSET_EXTENDED | _disp_lines_N | _dblht_en
+                            cmd_packet.byte[3] := core#CTRLBYTE_CMD
+                            cmd_packet.byte[4] := cmd
+                            cmd_packet.byte[5] := core#CTRLBYTE_DATA
+                            cmd_packet.byte[6] := val
+                            cmd_packet.byte[7] := core#CTRLBYTE_CMD
+                            cmd_packet.byte[8] := core#CMDSET_FUNDAMENTAL | _disp_lines_N | _dblht_en
+                            nr_bytes := 9
+                        OTHER:
+                            return
+
+                CMDSET_OLED:
+                    cmd_packet.byte[2] := core#CMDSET_EXTENDED | _disp_lines_N | _dblht_en
+                    cmd_packet.byte[3] := core#CTRLBYTE_CMD
+                    cmd_packet.byte[4] := core#OLED_CMDSET_ENA
+                    cmd_packet.byte[5] := core#CTRLBYTE_CMD
+                    cmd_packet.byte[6] := cmd
+                    cmd_packet.byte[7] := core#CTRLBYTE_CMD ' Yes, command - not data
+                    cmd_packet.byte[8] := val
+                    cmd_packet.byte[9] := core#CTRLBYTE_CMD
+                    cmd_packet.byte[10] := core#OLED_CMDSET_DIS
+                    cmd_packet.byte[11] := core#CTRLBYTE_CMD
+                    cmd_packet.byte[12] := core#CMDSET_FUNDAMENTAL | _disp_lines_N | _dblht_en
+                    nr_bytes := 13
+
+        TRANSTYPE_DATA:
+            cmd_packet.byte[0] := SLAVE_ADDR | _sa0_addr
+            cmd_packet.byte[1] := core#CTRLBYTE_DATA
+            cmd_packet.byte[2] := databyte
+            nr_bytes := 3
+
+    i2c.start
+    i2c.wr_block (@cmd_packet, nr_bytes)
     i2c.stop
 
 DAT

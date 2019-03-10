@@ -3,6 +3,8 @@
     Filename: core.con.us2066.spin
     Author: Jesse Burt
     Description: US2066 OLED Display driver registers/command set
+    Created Dec 30, 2017
+    Updated Mar 10, 2019
     Copyright (c) 2018
     See end of file for terms of use.
     --------------------------------------------
