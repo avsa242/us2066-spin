@@ -68,6 +68,8 @@ PUB Main
         Mirror_Demo
         time.Sleep (DEMO_DELAY)
         oled.Clear
+        oled.MirrorH (TRUE)
+        oled.MirrorV (TRUE)
 
 PUB Contrast_Demo | i
 
@@ -265,36 +267,23 @@ PUB Setup
     else
         ser.Str (string("us2066 object failed to start", ser#NL))
         oled.stop
+        time.MSleep (500)
         ser.Stop
-        repeat
+        flash (cfg#LED1)
 
-    oled.Start (RESET)
-    oled.Defaults
-'' Set up the OLED display with some sane defaults
-    oled.EnableInternalReg (FALSE)
-    oled.EnableDisplay (FALSE)
-    oled.SetCursor (FALSE)
-    oled.CursorBlink (FALSE)
-    oled.SetupOsc (7, 1)
-    oled.FontWidth (5)
-    oled.CursorInvert (FALSE)
-    oled.DisplayLines (4)
-    oled.CharGen (240)
-    oled.CharROM (0)
-    oled.MirrorH (FALSE)
-    oled.MirrorV (FALSE)
-    oled.TextDirection (0)
-    oled.PinCfg (0)
-    oled.EnableExtVSL (0)
-    oled.GPIOState (0)
-    oled.Contrast ($7F)
-    oled.Phs1Period (2)
-    oled.Phs2Period (15)
-    oled.VcomhDeselectLev (4)
+    oled.MirrorH (TRUE)
+    oled.MirrorV (TRUE)
     oled.Clear
     oled.Position (0, 0)
     oled.EnableDisplay (TRUE)
     time.MSleep (100)
+
+PUB flash(led_pin)
+
+    dira[led_pin] := 1
+    repeat
+        !outa[led_pin]
+        time.MSleep (100)
 
 DAT
 '                0|    |    |    |   |19

@@ -114,8 +114,10 @@ PUB Startx(SCL_PIN, SDA_PIN, RESET_PIN, I2C_HZ, SLAVE_BIT): okay
                             return FALSE
                 Reset
                 Defaults
-                if i2c.present (SLAVE_WR)
+                if PartID == $21
                     return okay
+                else
+                    return FALSE
     return FALSE                                                'If we got here, something went wrong
 
 PUB Stop
@@ -296,7 +298,7 @@ PUB CharGen(count)
         256: _char_predef := core#CG_ROM_RAM_256_0
         OTHER: return
 
-    writeRegX (TRANSTYPE_CMD, 1, CMDSET_EXTD, core#FUNCTION_SEL_B, _char_predef | _char_set)
+    writeRegX (TRANSTYPE_CMD, 2, CMDSET_EXTD, core#FUNCTION_SEL_B, _char_predef | _char_set)
 
 PUB CharROM(char_set)
 '' Select ROM font / character set
@@ -309,15 +311,15 @@ PUB CharROM(char_set)
         2: _char_set := core#CHAR_ROM_C
         OTHER: return
 
-    writeRegX (TRANSTYPE_CMD, 1, CMDSET_EXTD, core#FUNCTION_SEL_B, _char_predef | _char_set)
+    writeRegX (TRANSTYPE_CMD, 2, CMDSET_EXTD, core#FUNCTION_SEL_B, _char_predef | _char_set)
 
 PUB Clear
 '' Clear display
-    writeRegX (TRANSTYPE_CMD, 1, CMDSET_FUND, core#CLEAR_DISPLAY, 0)
+    writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, core#CLEAR_DISPLAY, 0)
 
 PUB CLS
 '' Alias for Clear
-    writeRegX (TRANSTYPE_CMD, 1, CMDSET_FUND, core#CLEAR_DISPLAY, 0)
+    writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, core#CLEAR_DISPLAY, 0)
 
 PUB ClearLine(line)
 '' Clear 'line'
@@ -350,7 +352,7 @@ PUB CursorBlink(enable)
         1: _blink_en := core#BLINK_ON
         OTHER: return
 
-    writeRegX (TRANSTYPE_CMD, 1, CMDSET_FUND, core#DISPLAY_ONOFF | _disp_en | _cursor_en | _blink_en, 0)
+    writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, core#DISPLAY_ONOFF | _disp_en | _cursor_en | _blink_en, 0)
 
 PUB CursorInvert(enable)
 '' Enable/disable black/white inverting of cursor
@@ -415,7 +417,7 @@ PUB DisplayShift(direction)
         RIGHT:            '  leave it alone, and use it directly in the cmd_Fund line below
         OTHER: return
 
-    writeRegX (TRANSTYPE_CMD, 1, CMDSET_FUND, core#CURS_DISP_SHIFT | direction, 0)
+    writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, core#CURS_DISP_SHIFT | direction, 0)
 
 PUB DoubleHeight(mode) | cmd_packet
 '' Set double-height font style mode
@@ -449,7 +451,7 @@ PUB EnableBacklight(enable)
         1: _disp_en := core#DISP_ON
         OTHER: return
 
-    writeRegX (TRANSTYPE_CMD, 1, CMDSET_FUND, core#DISPLAY_ONOFF | _disp_en | _cursor_en | _blink_en, 0)
+    writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, core#DISPLAY_ONOFF | _disp_en | _cursor_en | _blink_en, 0)
 
 PUB EnableDisplay(enable)
 '' Turn the display on or off
@@ -490,7 +492,6 @@ PUB EnableInternalReg(enable)
         0:
         1: enable := core#INT_REG_ENABLE
         OTHER: return
-
     writeRegX (TRANSTYPE_CMD, 2, CMDSET_EXTD, core#FUNCTION_SEL_A, enable)
 
 PUB FontWidth(dots)
@@ -501,7 +502,7 @@ PUB FontWidth(dots)
         6: _fontwidth := core#FONTWIDTH_6
         OTHER: return
 
-    writeRegX (TRANSTYPE_CMD, 0, CMDSET_EXTD, core#EXTENDED_FUNCSET | _fontwidth | _cursor_invert | _disp_lines_NW, 0)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_EXTD, core#EXTENDED_FUNCSET | _fontwidth | _cursor_invert | _disp_lines_NW, 0)
 
 PUB GetPos: addr | data_in
 '' Gets current position in DDRAM
@@ -550,7 +551,7 @@ PUB MirrorH(enable)
         1: _mirror_h := core#SEG0_99
         OTHER: return
 
-    writeRegX (TRANSTYPE_CMD, 0, CMDSET_EXTD, core#ENTRY_MODE_SET | _mirror_h | _mirror_v, 0)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_EXTD, core#ENTRY_MODE_SET | _mirror_h | _mirror_v, 0)
 
 PUB MirrorV(enable)
 '' Mirror display, vertically
@@ -559,7 +560,7 @@ PUB MirrorV(enable)
         1: _mirror_v := core#COM31_0
         OTHER: return
 
-    writeRegX (TRANSTYPE_CMD, 0, CMDSET_EXTD, core#ENTRY_MODE_SET | _mirror_h | _mirror_v, 0)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_EXTD, core#ENTRY_MODE_SET | _mirror_h | _mirror_v, 0)
 
 PUB Newline: row | pos
 '' Query the controller for the current cursor position in DDRAM and increment the row (wrapping to row 0)
@@ -576,9 +577,6 @@ PUB Newline: row | pos
 
 PUB PartID: pid
 '' Gets Part ID
-'' *** US2066 Datasheet p.39 says this should return %0100001 ($21),
-''     but it seems to return %0000001 ($01)
-'    cmd_Fund ($00)
     writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, $00, 0)
 
     i2c.start
@@ -855,11 +853,11 @@ PUB readRegX(reg, bytes, dest) | cmd_packet
     i2c.rd_block (dest, bytes, TRUE)
     i2c.stop
 
-PUB writeRegX(trans_type, nr_bytes, cmd_set, cmd, val) | cmd_packet[2]
+PUB writeRegX(trans_type, nr_bytes, cmd_set, cmd, val) | cmd_packet[4]
 
     case trans_type
         TRANSTYPE_CMD:
-            cmd_packet.byte[0] := CMD_HDR | _sa0_addr
+            cmd_packet.word[0] := CMD_HDR | _sa0_addr
 
             case cmd_set
                 CMDSET_FUND:
@@ -885,6 +883,7 @@ PUB writeRegX(trans_type, nr_bytes, cmd_set, cmd, val) | cmd_packet[2]
                             cmd_packet.byte[7] := core#CTRLBYTE_CMD
                             cmd_packet.byte[8] := core#CMDSET_FUNDAMENTAL | _disp_lines_N | _dblht_en
                             nr_bytes := 9
+
                         OTHER:
                             return
 
