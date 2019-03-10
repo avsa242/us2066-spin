@@ -360,7 +360,7 @@ PUB CursorInvert(enable)
         0: _cursor_invert := core#CURSOR_NORMAL
         OTHER: return
 
-    cmd_Ext (core#EXTENDED_FUNCSET | _fontwidth | _cursor_invert | _disp_lines_NW, 0)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_EXTD, core#EXTENDED_FUNCSET | _fontwidth | _cursor_invert | _disp_lines_NW, 0)
 
 PUB DisplayBlink(delay)
 '' Gradually fade out/in display
