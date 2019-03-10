@@ -528,7 +528,7 @@ PUB GPIOState(state)
 
 PUB Home
 '' Returns cursor to home position (0, 0), without clearing the display
-    cmd_Fund (core#HOME_DISPLAY)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_FUND, core#HOME_DISPLAY, 0)
 
 PUB InvertDisplay(enable)
 '' Enable/disable inverted display
