@@ -739,7 +739,7 @@ PUB TextDirection(direction)
         1: _seg_remap := core#SEG_LR_REMAP_EN
         OTHER: return
 
-    cmd8_OLED ( core#SET_SEG_PINS, _seg_remap | _seg_pincfg)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_OLED, core#SET_SEG_PINS, _seg_remap | _seg_pincfg)
 
 PUB VcomhDeselectLev(level)
 '' Adjust Vcomh regulator output
