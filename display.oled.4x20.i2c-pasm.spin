@@ -491,7 +491,7 @@ PUB EnableInternalReg(enable)
         1: enable := core#INT_REG_ENABLE
         OTHER: return
 
-    cmd8_Ext (core#FUNCTION_SEL_A, enable)
+    writeRegX (TRANSTYPE_CMD, 2, CMDSET_EXTD, core#FUNCTION_SEL_A, enable)
 
 PUB FontWidth(dots)
 '' Set Font width (5 or 6 dots)
