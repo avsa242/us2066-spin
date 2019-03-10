@@ -402,8 +402,8 @@ PUB DisplayLines(lines)
 
         OTHER: return
 
-    cmd_Fund (core#FUNCTION_SET_0 | _disp_lines_N | _dblht_en)
-    cmd_Ext (core#EXTENDED_FUNCSET | _fontwidth | _cursor_invert | _disp_lines_NW, 0)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_FUND, core#FUNCTION_SET_0 | _disp_lines_N | _dblht_en, 0)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_EXTD, core#EXTENDED_FUNCSET | _fontwidth | _cursor_invert | _disp_lines_NW, 0)
 
 PUB DisplayShift(direction)
 '' Shift the display left or right by one character cell's width
