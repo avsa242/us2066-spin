@@ -341,7 +341,7 @@ PUB Contrast(level)
         0..255: _contrast := level
         OTHER: return
 
-    cmd8_OLED ( core#SET_CONTRAST, _contrast)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_OLED, core#SET_CONTRAST, _contrast)
 
 PUB CursorBlink(enable)
 '' Enable/Disable cursor blinking
