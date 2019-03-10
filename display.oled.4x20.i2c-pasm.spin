@@ -415,7 +415,7 @@ PUB DisplayShift(direction)
         RIGHT:            '  leave it alone, and use it directly in the cmd_Fund line below
         OTHER: return
 
-    cmd_Fund (core#CURS_DISP_SHIFT | direction)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_FUND, core#CURS_DISP_SHIFT | direction, 0)
 
 PUB DoubleHeight(mode) | cmd_packet
 '' Set double-height font style mode
