@@ -753,7 +753,7 @@ PUB VcomhDeselectLev(level)
         0..4: _vcomh_des_lvl := level << 4
         OTHER: return
  
-    cmd8_OLED ( core#SET_VCOMH_DESEL, _vcomh_des_lvl)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_OLED, core#SET_VCOMH_DESEL, _vcomh_des_lvl)
 
 PRI cmd_Ext(cmd, extReg_IS) | cmd_packet[2]
 '' Access Extended Command Set
