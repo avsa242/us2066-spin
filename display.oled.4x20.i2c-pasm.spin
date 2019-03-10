@@ -449,7 +449,7 @@ PUB EnableBacklight(enable)
         1: _disp_en := core#DISP_ON
         OTHER: return
 
-    cmd_Fund (core#DISPLAY_ONOFF | _disp_en | _cursor_en | _blink_en)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_FUND, core#DISPLAY_ONOFF | _disp_en | _cursor_en | _blink_en, 0)
 
 PUB EnableDisplay(enable)
 '' Turn the display on or off
