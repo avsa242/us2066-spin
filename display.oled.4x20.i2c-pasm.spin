@@ -616,7 +616,7 @@ PUB Phs2Period(clocks)
         1..15: _phs2_per := (clocks << 4)
         OTHER: return
 
-    cmd8_OLED (core#SET_PHASE_LEN, _phs2_per | _phs1_per)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_OLED, core#SET_PHASE_LEN, _phs2_per | _phs1_per)
 
 PUB Position(column, row) | offset
 '' Sets current cursor position
