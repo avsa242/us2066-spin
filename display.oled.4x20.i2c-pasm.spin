@@ -219,8 +219,7 @@ PUB Backspace | pos, col, row
 
 PUB Busy | flag
 '' Returns Busy Flag (bit 7 of $00)
-'    cmd_Fund ($00)
-    writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, $00, 0)'(trans_type, nr_bytes, cmd_set, cmd, val)
+    writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, $00, 0)
     i2c.start
     i2c.write (SLAVE_RD | _sa0_addr)
     flag := i2c.read (TRUE)
@@ -297,7 +296,7 @@ PUB CharGen(count)
         256: _char_predef := core#CG_ROM_RAM_256_0
         OTHER: return
 
-    cmd8_Ext (core#FUNCTION_SEL_B, _char_predef | _char_set)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_EXTD, core#FUNCTION_SEL_B, _char_predef | _char_set)
 
 PUB CharROM(char_set)
 '' Select ROM font / character set
@@ -506,8 +505,7 @@ PUB FontWidth(dots)
 
 PUB GetPos: addr | data_in
 '' Gets current position in DDRAM
-'    cmd_Fund ($00)
-    writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, $00, 0)'(trans_type, nr_bytes, cmd_set, cmd, val)
+    writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, $00, 0)
     i2c.start
     i2c.write (SLAVE_RD | _sa0_addr)
     addr := i2c.read (TRUE)
@@ -581,7 +579,7 @@ PUB PartID: pid
 '' *** US2066 Datasheet p.39 says this should return %0100001 ($21),
 ''     but it seems to return %0000001 ($01)
 '    cmd_Fund ($00)
-    writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, $00, 0)'(trans_type, nr_bytes, cmd_set, cmd, val)
+    writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, $00, 0)
 
     i2c.start
     i2c.write (SLAVE_RD | _sa0_addr)
