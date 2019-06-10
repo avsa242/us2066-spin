@@ -6,7 +6,7 @@
      alphanumeric displays
     Copyright (c) 2018
     Created Dec 30, 2017
-    Updated Mar 10, 2019
+    Updated Jun 10, 2019
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -87,7 +87,7 @@ OBJ
     core    : "core.con.us2066"
     time    : "time"
 
-PUB null
+PUB Null
 '' This is not a top-level object
 
 PUB Start(resetpin): okay
@@ -542,7 +542,7 @@ PUB InvertDisplay(enable)
         0: _disp_invert := core#NORMAL_DISPLAY
         OTHER: return
 
-    writeRegX (TRANSTYPE_CMD, 0, CMDSET_EXTD, core#FUNCTION_SET_1 | _cgram_blink | _disp_invert, 0)
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_EXTD, core#FUNCTION_SET_1 | _cgram_blink | _disp_invert, 0)
 
 PUB MirrorH(enable)
 '' Mirror display, horizontally
@@ -815,19 +815,6 @@ PRI wrdata(databyte) | cmd_packet
     i2c.wr_block (@cmd_packet, 3)
     i2c.stop
   
-{PRI readX(ptr_buff, num_bytes)
-'' Read num_bytes from the bus into ptr_buff
-    i2c.start
-    i2c.write (SLAVE_ADDR | _sa0_addr | R)
-    i2c.pread (ptr_buff, num_bytes, TRUE)
-    i2c.stop
-}
-{PRI WriteX(ptr_buff, num_bytes)
-'' Write num_bytes from ptr_buff to the bus
-    i2c.start
-    i2c.pwrite (ptr_buff, num_bytes)
-    i2c.stop
-}
 PUB readRegX(reg, bytes, dest) | cmd_packet
 
     case reg

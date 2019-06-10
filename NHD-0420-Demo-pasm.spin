@@ -6,19 +6,21 @@
     Author: Jesse Burt
     Copyright (c) 2018
     Created Dec 30, 2017
-    Updated Mar 10, 2019
+    Updated Jun 10, 2019
     See end of file for terms of use.
     --------------------------------------------
 }
 CON
 
-    _clkmode  = cfg#_clkmode
-    _xinfreq  = cfg#_xinfreq
+    _clkmode    = cfg#_clkmode
+    _xinfreq    = cfg#_xinfreq
 
-    RESET     = 25        'I/O pin attached to display's RESET pin
+    RESET       = 25        'I/O pin attached to display's RESET pin
 
-    DEMO_DELAY= 2         'Delay (sec) between different demos
-    MODE_DELAY= 1         'Delay (sec) between different modes within a particular demo
+    DEMO_DELAY  = 2         'Delay (sec) between different demos
+    MODE_DELAY  = 1         'Delay (sec) between different modes within a particular demo
+
+    LED         = cfg#LED1
 
 OBJ
 
@@ -32,44 +34,44 @@ PUB Main
 
     Setup
 
-    repeat
-        Greet_Demo
-        time.Sleep (DEMO_DELAY)
-        oled.Clear
+    Greet_Demo
+    time.Sleep (DEMO_DELAY)
+    oled.Clear
 
-        Count_Demo
-        time.Sleep (DEMO_DELAY)
-        oled.Clear
+    Count_Demo
+    time.Sleep (DEMO_DELAY)
+    oled.Clear
 
-        DoubleHeight_Demo
-        time.Sleep (DEMO_DELAY)
-        oled.Clear
+    DoubleHeight_Demo
+    time.Sleep (DEMO_DELAY)
+    oled.Clear
 
-        Contrast_Demo
-        time.Sleep (DEMO_DELAY)
-        oled.Clear
+    Contrast_Demo
+    time.Sleep (DEMO_DELAY)
+    oled.Clear
 
-        Position_Demo
-        time.Sleep (DEMO_DELAY)
-        oled.Clear
+    Position_Demo
+    time.Sleep (DEMO_DELAY)
+    oled.Clear
 
-        Cursor_demo
-        time.Sleep (DEMO_DELAY)
-        oled.Clear
+    Cursor_demo
+    time.Sleep (DEMO_DELAY)
+    oled.Clear
 
-        Invert_demo
-        time.Sleep (DEMO_DELAY)
-        oled.Clear
+    Invert_demo
+    time.Sleep (DEMO_DELAY)
+    oled.Clear
 
-        FontWidth_Demo
-        time.Sleep (DEMO_DELAY)
-        oled.Clear
+    FontWidth_Demo
+    time.Sleep (DEMO_DELAY)
+    oled.Clear
 
-        Mirror_Demo
-        time.Sleep (DEMO_DELAY)
-        oled.Clear
-        oled.MirrorH (TRUE)
-        oled.MirrorV (TRUE)
+    Mirror_Demo
+    time.Sleep (DEMO_DELAY)
+    oled.Clear
+
+    oled.Stop
+    Flash (LED, 100)
 
 PUB Contrast_Demo | i
 
@@ -269,21 +271,21 @@ PUB Setup
         oled.stop
         time.MSleep (500)
         ser.Stop
-        flash (cfg#LED1)
+        Flash (cfg#LED1, 500)
 
-    oled.MirrorH (TRUE)
-    oled.MirrorV (TRUE)
+    oled.MirrorH (FALSE)
+    oled.MirrorV (FALSE)
     oled.Clear
     oled.Position (0, 0)
     oled.EnableDisplay (TRUE)
     time.MSleep (100)
 
-PUB flash(led_pin)
+PUB Flash(led_pin, delay_ms)
 
     dira[led_pin] := 1
     repeat
         !outa[led_pin]
-        time.MSleep (100)
+        time.MSleep (delay_ms)
 
 DAT
 '                0|    |    |    |   |19
