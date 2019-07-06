@@ -260,7 +260,7 @@ PUB Backspace | pos, col, row
         OTHER: return
 
 PUB Busy | flag
-' Returns Busy Flag (bit 7 of $00)
+' Return: Busy Flag
     writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, $00, 0)
     i2c.start
     i2c.write (SLAVE_RD | _sa0_addr)
@@ -285,9 +285,9 @@ PUB CarriageReturn | pos, row
 
 PUB Char(ch)
 ' Display single character.
-' Process/interpret unprintable/control characters
+'   NOTE: Control codes will be processed accordingly
     case ch
-        7:
+        7:                              ' Flash the display
             InvertDisplay (TRUE)
             time.MSleep (50)
             InvertDisplay (FALSE)
@@ -321,16 +321,17 @@ PUB PutC(ch)
             wrdata(ch)
 
 PUB Char_Literal(ch)
-' Display single character (pass data through without processing it first)
+' Display single character
+'   NOTE: Control codes will not be processed, but will be displayed
     wrdata(ch)
 
 PUB CharGen(count)
 ' Select number of pre-defined vs free user-defined character cells
-' Valid values:
-'  240 (leaves 8 available user-defined characters)
-'  248 (leaves 8 available user-defined characters)
-'  250 (leaves 6 available user-defined characters)
-'  256 (leaves 0 available user-defined characters)
+'   Valid values:
+'       240 (leaves 8 available user-defined characters)
+'       248 (leaves 8 available user-defined characters)
+'       250 (leaves 6 available user-defined characters)
+'       256 (leaves 0 available user-defined characters)
     case count
         240: _char_predef := core#CG_ROM_RAM_240_8
         248: _char_predef := core#CG_ROM_RAM_248_8
@@ -342,14 +343,17 @@ PUB CharGen(count)
 
 PUB CharROM(char_set)
 ' Select ROM font / character set
-'  0: ROM A
-'  1: ROM B
-'  2: ROM C
+'   Valid values:
+'       0: ROM A
+'       1: ROM B
+'       2: ROM C
+'   Any other value returns the current setting
     case char_set
         0: _char_set := core#CHAR_ROM_A
         1: _char_set := core#CHAR_ROM_B
         2: _char_set := core#CHAR_ROM_C
-        OTHER: return
+        OTHER:
+            return _char_set
 
     writeRegX (TRANSTYPE_CMD, 2, CMDSET_EXTD, core#FUNCTION_SEL_B, _char_predef | _char_set)
 
@@ -362,15 +366,17 @@ PUB CLS
     writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, core#CLEAR_DISPLAY, 0)
 
 PUB ClearLine(line)
-' Clear 'line'
-    if lookdown (line: 0..4)
+' Clear specified line
+'   Valid values: 0..3
+'   Any other value is ignored
+    if lookdown (line: 0..3)
         Position(0, line)
         repeat 20
             Char(" ")
 
 PUB ClearLN(line)
 ' Alias for ClearLine
-    if lookdown (line: 0..4)
+    if lookdown (line: 0..3)
         Position(0, line)
         repeat 20
             Char(" ")
@@ -398,57 +404,76 @@ PUB ClkFrq(frequency, divisor)
 
 PUB Contrast(level)
 ' Set display contrast level
-' level: 00..$FF
-' POR: $7F
+'   Valid values: 0..127 (POR: 127)
+'   Any other value returns the current setting
     case level
         0..255: _contrast := level
-        OTHER: return
+        OTHER:
+            return _contrast
 
     writeRegX (TRANSTYPE_CMD, 1, CMDSET_OLED, core#SET_CONTRAST, _contrast)
 
 PUB CursorBlink(enable)
-' Enable/Disable cursor blinking
+' Enable cursor blinking
+'   Valid values:
+'      *FALSE (0): Steady cursor
+'       TRUE (-1 or 1): Blinking cursor
+'   Any other value returns the current setting
     case ||enable
         0: _blink_en := core#BLINK_OFF
         1: _blink_en := core#BLINK_ON
-        OTHER: return
+        OTHER:
+            return _blink_en
 
     writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, core#DISPLAY_ONOFF | _disp_en | _cursor_en | _blink_en, 0)
 
 PUB CursorInvert(enable)
-' Enable/disable black/white inverting of cursor
-' POR: 0
+' Invert cursor
+'   Valid values:
+'      *FALSE (0): Normal cursor
+'       TRUE (-1 or 1): Inverted cursor
+'   Any other value returns the current setting
     case ||enable
         1: _cursor_invert := core#CURSOR_INVERT
         0: _cursor_invert := core#CURSOR_NORMAL
-        OTHER: return
+        OTHER:
+            return _cursor_invert
 
     writeRegX (TRANSTYPE_CMD, 1, CMDSET_EXTD, core#EXTENDED_FUNCSET | _fontwidth | _cursor_invert | _disp_lines_NW, 0)
 
 PUB DisplayBlink(delay)
 ' Gradually fade out/in display
-'  'delay' is in frames
-'  Pass 0 to disable
+'   Valid values:
+'       0..128, in multiples of 8
+'   Any other value returns the current setting
+'   NOTE: 0 effectively disables the setting
     case delay
         0: _fadeblink := core#FADE_BLINK_DIS
         8,16,24,32,40,48,56,64,72,80,88,96,104,112,120,128: _fadeblink := (core#BLINK_ENA | ((delay / 8) - 1))
-        OTHER: return
+        OTHER:
+            return _fadeblink
 
     writeRegX (TRANSTYPE_CMD, 1, CMDSET_OLED, core#FADEOUT_BLINK, _fadeblink)
 
 PUB DisplayFade(delay)
 ' Gradually fade out display (just once)
-'  'delay' is in frames
-'  Pass 0 to disable
+'   Valid values:
+'       0..128, in multiples of 8
+'   Any other value returns the current setting
+'   NOTE: 0 effectively disables the function
     case delay
         0: _fadeblink := core#FADE_BLINK_DIS
         8,16,24,32,40,48,56,64,72,80,88,96,104,112,120,128: _fadeblink := (core#FADE_OUT_ENA | ((delay / 8) - 1))
-        OTHER: return
+        OTHER:
+            return _fadeblink
 
     writeRegX (TRANSTYPE_CMD, 1, CMDSET_OLED, core#FADEOUT_BLINK, _fadeblink)
 
 PUB DisplayLines(lines)
-' Set 1, 2, 3 or 4-line display mode
+' Set number of display lines
+'   Valid values:
+'       1..4
+'   Any other value is ignored
     case lines
         1:
             _disp_lines_N := core#DISP_LINES_1_3
@@ -470,25 +495,27 @@ PUB DisplayLines(lines)
 
 PUB DisplayShift(direction)
 ' Shift the display left or right by one character cell's width
-' Suggestion: Use the constants LEFT and RIGHT as parameters
-'  or, if you prefer, LEFT is %10 (2) and RIGHT is %11 (3)
-' All other values ignored
+'   Valid values:
+'       LEFT (2)
+'       RIGHT (3)
+'   Any other value is ignored
     case direction
         LEFT:             ' As long as the value passed is valid,
-        RIGHT:            '  leave it alone, and use it directly in the cmd_Fund line below
+        RIGHT:            '  leave it alone, and use it directly in the writeRegX line.
         OTHER: return
 
     writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, core#CURS_DISP_SHIFT | direction, 0)
 
 PUB DoubleHeight(mode) | cmd_packet
 ' Set double-height font style mode
-'  0: Standard height font all 4 lines / double-height disabled
-'  1: Bottom two lines form one double-height line (top 2 lines standard height, effectively 3 lines)
-'  2: Middle two lines form one double-height line (top and bottom lines standard height, effectively 3 lines)
-'  3: Top and bottom lines each form a double-height line (effectively 2 lines)
-'  4: Top two lines form one double-height line (bottom 2 lines standard height, effectively 3 lines)
-'  Any other value ignored
-' NOTE: Takes effect immediately, _will_ affect screen contents
+'   Valid values:
+'      *0: Standard height font all 4 lines / double-height disabled
+'       1: Bottom two lines form one double-height line (top 2 lines standard height, effectively 3 lines)
+'       2: Middle two lines form one double-height line (top and bottom lines standard height, effectively 3 lines)
+'       3: Top and bottom lines each form a double-height line (effectively 2 lines)
+'       4: Top two lines form one double-height line (bottom 2 lines standard height, effectively 3 lines)
+'   Any other value returns the current setting
+'   NOTE: Takes effect immediately - will affect current screen contents
     case mode
         0:
             _dblht_mode := 0
@@ -499,7 +526,8 @@ PUB DoubleHeight(mode) | cmd_packet
         2: _dblht_mode := core#DBLHEIGHT_MIDDLE
         3: _dblht_mode := core#DBLHEIGHT_BOTH
         4: _dblht_mode := core#DBLHEIGHT_TOP
-        OTHER: return
+        OTHER:
+            return _dblht_mode
 
     _dblht_en := core#DBLHT_FONT_EN
 
@@ -510,17 +538,23 @@ PUB EnableBacklight(enable)
     case ||enable
         0: _disp_en := 0
         1: _disp_en := core#DISP_ON
-        OTHER: return
+        OTHER:
+            return _disp_en
 
     writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, core#DISPLAY_ONOFF | _disp_en | _cursor_en | _blink_en, 0)
 
 PUB EnableDisplay(enable)
 ' Turn the display on or off
-' NOTE: Does not affect display contents
+'   Valid values:
+'       FALSE (0): Display off
+'       TRUE (-1 or 1): Display on
+'   Any other value returns the current setting
+'   NOTE: Does not affect display contents
     case ||enable
         0: _disp_en := 0
         1: _disp_en := core#DISP_ON
-        OTHER: return
+        OTHER:
+            return _disp_en
 
     writeRegX (TRANSTYPE_CMD, 1, CMDSET_FUND, core#DISPLAY_ONOFF | _disp_en | _cursor_en | _blink_en, 0)
 
@@ -535,20 +569,24 @@ PUB DisplayOn
 
 PUB EnableExtVSL(enabled)
 ' External Segment Voltage Reference
-' POR: 0
+'   Valid values:
+'      *FALSE (0): Disable
+'       TRUE (-1 or 1): Enable
+'   Any other value returns the current setting
     case ||enabled
         1: _ext_vsl := core#VSL_EXTERNAL
         0: _ext_vsl := core#VSL_INTERNAL
-        OTHER: return
+        OTHER:
+            return _ext_vsl
 
     writeRegX (TRANSTYPE_CMD, 1, CMDSET_OLED, core#FUNCTION_SEL_C, _ext_vsl | _gpio_state)
 
 PUB EnableInternalReg(enable)
-' Internal regulator setting
-'  1 or TRUE: Enable (use for 5V operation)
-'  0 or FALSE: Disable (3.3V/low-voltage operation)
-'  all other values ignored
-' POR: 1
+' Enable internal regulator
+'   Valid values:
+'      *TRUE (-1 or 1): Enable (use for 5V operation)
+'       FALSE (0): Disable (3.3V/low-voltage operation)
+'   Any other value is ignored
     case ||enable
         0:
         1: enable := core#INT_REG_ENABLE
@@ -556,17 +594,20 @@ PUB EnableInternalReg(enable)
     writeRegX (TRANSTYPE_CMD, 2, CMDSET_EXTD, core#FUNCTION_SEL_A, enable)
 
 PUB FontWidth(dots)
-' Set Font width (5 or 6 dots)
-' POR: 5
+' Set Font width
+'   Valid values: *5 or 6
+'   Any other value returns the current setting
     case dots
         5: _fontwidth := core#FONTWIDTH_5
         6: _fontwidth := core#FONTWIDTH_6
-        OTHER: return
+        OTHER:
+            return _fontwidth
 
     writeRegX (TRANSTYPE_CMD, 1, CMDSET_EXTD, core#EXTENDED_FUNCSET | _fontwidth | _cursor_invert | _disp_lines_NW, 0)
 
 PUB GetPos: addr | data_in
-' Gets current position in DDRAM
+' Get current position in DDRAM
+'   Returns: Display address of current cursor position
     writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, $00, 0)
     i2c.start
     i2c.write (SLAVE_RD | _sa0_addr)
@@ -574,52 +615,63 @@ PUB GetPos: addr | data_in
     i2c.stop
 
 PUB GPIOState(state)
-' 0: GPIO pin HiZ, input disabled (always read as low)
-' 1: GPIO pin HiZ, input enabled
-' 2: GPIO pin output, low
-' 3: GPIO pin output, high
-' POR: 2
+' Set state of GPIO pin
+'   Valid values:
+'       0: GPIO pin HiZ, input disabled (always read as low)
+'       1: GPIO pin HiZ, input enabled
+'      *2: GPIO pin output, low
+'       3: GPIO pin output, high
     case state
         0: _gpio_state := core#GPIO_HIZ_INP_DIS
         1: _gpio_state := core#GPIO_HIZ_INP_ENA
         2: _gpio_state := core#GPIO_OUT_LOW
         3: _gpio_state := core#GPIO_OUT_HIGH
-        OTHER: return
+        OTHER:
+            return _gpio_state
 
     writeRegX (TRANSTYPE_CMD, 1, CMDSET_OLED, core#FUNCTION_SEL_C, _ext_vsl | _gpio_state)
 
 PUB Home
-' Returns cursor to home position (0, 0), without clearing the display
+' Returns cursor to home position (0, 0)
+'   NOTE: Doesn't clear the display
     writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, core#HOME_DISPLAY, 0)
 
 PUB InvertDisplay(enable)
-' Enable/disable inverted display
-' POR: 0
-' NOTE:
-'  1. Takes effect immediately
-'  2. Display will appear dimmer, overall
+' Invert display
+'   Valid values: TRUE (-1 or 1), FALSE (0)
+'   Any other value returns the current setting
+'   NOTE:
+'       1. Takes effect immediately
+'       2. Display will appear dimmer, overall, when inverted
     case ||enable
         1: _disp_invert := core#REVERSE_DISPLAY
         0: _disp_invert := core#NORMAL_DISPLAY
-        OTHER: return
+        OTHER:
+            return _disp_invert
 
     writeRegX (TRANSTYPE_CMD, 1, CMDSET_EXTD, core#FUNCTION_SET_1 | _cgram_blink | _disp_invert, 0)
 
 PUB MirrorH(enable)
 ' Mirror display, horizontally
+'   Valid values: TRUE (-1 or 1), FALSE (0)
+'   Any other value returns the current setting
     case ||enable
         0: _mirror_h := core#SEG99_0
         1: _mirror_h := core#SEG0_99
-        OTHER: return
+        OTHER:
+            return _mirror_h
 
     writeRegX (TRANSTYPE_CMD, 1, CMDSET_EXTD, core#ENTRY_MODE_SET | _mirror_h | _mirror_v, 0)
 
 PUB MirrorV(enable)
 ' Mirror display, vertically
+'   Valid values: TRUE (-1 or 1), FALSE (0)
+'   Any other value returns the current setting
     case ||enable
         0: _mirror_v := core#COM0_31
         1: _mirror_v := core#COM31_0
-        OTHER: return
+        OTHER:
+            return _mirror_v
 
     writeRegX (TRANSTYPE_CMD, 1, CMDSET_EXTD, core#ENTRY_MODE_SET | _mirror_h | _mirror_v, 0)
 
@@ -637,7 +689,8 @@ PUB Newline: row | pos
     Position (0, row)
 
 PUB PartID: pid
-' Gets Part ID
+' Get Part ID
+'   Returns: $21 if successful
     writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, $00, 0)
 
     i2c.start
@@ -648,9 +701,10 @@ PUB PartID: pid
 
 PUB PinCfg(cfg)
 ' Change mapping between display data column address and segment driver.
-' 0: Sequential SEG pin cfg
-' 1: Alternative (odd/even) SEG pin cfg
-' NOTE: Only affects subsequent data input. Data already displayed/in DDRAM will be unchanged.
+'   Valid values:
+'       0: Sequential SEG pin cfg
+'       1: Alternative (odd/even) SEG pin cfg
+'   NOTE: Only affects subsequent data input. Data already displayed/in DDRAM will be unchanged.
     case cfg
         0: _seg_pincfg := core#SEQ_SEGPINCFG
         1: _seg_pincfg := core#ALT_SEGPINCFG
@@ -660,7 +714,7 @@ PUB PinCfg(cfg)
 
 PUB Phs1Period(clocks)
 ' Set length of phase 1 of segment waveform of the driver
-' Valid values: 0 to 32 clocks
+' Valid values: 0..32 clocks
     case clocks
         2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32: _phs1_per := (clocks >> 1) - 1
         OTHER: return
@@ -669,8 +723,7 @@ PUB Phs1Period(clocks)
 
 PUB Phs2Period(clocks)
 ' Set length of phase 2 of segment waveform of the driver
-' Valid values: 1 to 15 clocks
-' POR: 7
+'   Valid values: 1..15 clocks (POR: 7)
     case clocks
         1..15: _phs2_per := (clocks << 4)
         OTHER: return
@@ -678,7 +731,7 @@ PUB Phs2Period(clocks)
     writeRegX (TRANSTYPE_CMD, 1, CMDSET_OLED, core#SET_PHASE_LEN, _phs2_per | _phs1_per)
 
 PUB Position(column, row) | offset
-' Sets current cursor position
+' Set current cursor position
     case column
         0..19:
             case row
@@ -700,18 +753,19 @@ PUB GotoXY(column, line) | offset
     writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, core#SET_DDRAM_ADDR|offset, 0)
 
 PUB Reset
-
+' Send reset signal to display controller
     dira[_reset] := 1
     outa[_reset] := 0
     outa[_reset] := 1
     time.MSleep (1)
 
 PUB SetCursor(type)
-' Selects cursor type
-' 0: No cursor
-' 1: Block, blinking
-' 2: Underscore, no blinking
-' 3: Underscore, block blinking
+' Select cursor type
+'   Valid values:
+'       0: No cursor
+'       1: Block, blinking
+'       2: Underscore, no blinking
+'       3: Underscore, block blinking
     case type
         0:  _cursor_invert := _blink_en := _cursor_en := FALSE
         1:
@@ -753,12 +807,13 @@ PUB Cursor(type)
     CursorInvert (_cursor_invert >> 1)
 
 PUB Str(stringptr)
-' Display zero-terminated string (use if you want to be able to use newline characters in the string)
+' Display zero-terminated string
     repeat strsize(stringptr)
         Char(byte[stringptr++])
 
 PUB Str_Literal(stringptr)
-' Display zero-terminated string. Don't process input.
+' Display zero-terminated string
+'   NOTE: Control characters will not be processed, but will be displayed
     repeat strsize(stringptr)
         Char_Literal(byte[stringptr++])
 
@@ -769,7 +824,8 @@ PUB StrDelay(stringptr, delay)
         time.MSleep (delay)
 
 PUB StrDelay_Literal(stringptr, delay)
-' Display zero-terminated string with inter-character delay, in ms. Don't process input.
+' Display zero-terminated string with inter-character delay, in ms
+'   NOTE: Control characters will not be processed, but will be displayed
     repeat strsize(stringptr)
         Char_Literal(byte[stringptr++])
         time.MSleep (delay)
