@@ -3,10 +3,10 @@
     Filename: display.oled.4x20.i2c-pasm.spin
     Author: Jesse Burt
     Description: I2C driver for US2066-based OLED
-     alphanumeric displays
+        alphanumeric displays
     Copyright (c) 2018
     Created Dec 30, 2017
-    Updated Jun 10, 2019
+    Updated Jul 6, 2019
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -113,7 +113,7 @@ PUB Startx(SCL_PIN, SDA_PIN, RESET_PIN, I2C_HZ, SLAVE_BIT): okay
                             i2c.terminate
                             return FALSE
                 Reset
-                Defaults
+                Defaults4x20
                 if PartID == $21
                     return okay
                 else
@@ -130,7 +130,47 @@ PUB finalize
     EnableDisplay (FALSE)
     i2c.terminate
 
-PUB Defaults
+PUB Defaults2x16
+'' Set some sane defaults
+    _fontwidth := core#FONTWIDTH_5
+    _cursor_invert := core#CURSOR_NORMAL
+    _disp_lines_NW := core#NW_1_2_LINE
+
+    _disp_lines_N := core#DISP_LINES_2_4
+    _dblht_en := 0
+
+    _disp_en := 0
+    _cursor_en := 0
+    _blink_en := 0
+
+    _char_predef := core#CG_ROM_RAM_240_8
+    _char_set := core#CHAR_ROM_A
+
+    _frequency := %0111
+    _divisor := %0000
+
+    _mirror_h := core#SEG0_99
+    _mirror_v := core#COM0_31
+
+    _seg_remap := core#SEG_LR_REMAP_DIS
+    _seg_pincfg := core#ALT_SEGPINCFG
+
+    _ext_vsl := core#VSL_INTERNAL
+    _gpio_state := core#GPIO_OUT_LOW
+
+    _contrast := 127
+
+    _phs1_per := 8
+    _phs2_per := 7
+
+    _vcomh_des_lvl := 2
+
+    _cgram_blink := core#CGRAM_BLINK_DIS
+    _disp_invert := core#NORMAL_DISPLAY
+
+    _fadeblink := 0
+
+PUB Defaults4x20
 '' Set some sane defaults
     _fontwidth := core#FONTWIDTH_5
     _cursor_invert := core#CURSOR_NORMAL

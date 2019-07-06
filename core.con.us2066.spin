@@ -12,7 +12,7 @@
 
 CON
 
-    SLAVE_ADDR          = $3C << 1 '$3C - Default slave address of NHD420/US2066
+    SLAVE_ADDR          = $3C << 1 '$3C - Default slave address of US2066
     I2C_MAX_FREQ        = 400_000  '400kHz - Max operating freq
 
     DATABIT             = $40
