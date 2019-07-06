@@ -783,7 +783,8 @@ PUB TextDirection(direction)
     case direction
         0: _seg_remap := core#SEG_LR_REMAP_DIS
         1: _seg_remap := core#SEG_LR_REMAP_EN
-        OTHER: return
+        OTHER:
+            return _seg_remap
 
     writeRegX (TRANSTYPE_CMD, 1, CMDSET_OLED, core#SET_SEG_PINS, _seg_remap | _seg_pincfg)
 
