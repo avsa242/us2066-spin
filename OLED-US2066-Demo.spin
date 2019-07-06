@@ -29,7 +29,7 @@ OBJ
 
     cfg : "core.con.boardcfg.flip"
     time: "time"
-    oled: "display.oled.4x20.i2c-pasm"
+    oled: "display.oled.us2066.i2c"
     int : "string.integer"
     ser : "com.serial.terminal"
 

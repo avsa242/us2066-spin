@@ -1,6 +1,6 @@
 {
     --------------------------------------------
-    Filename: display.oled.4x20.i2c-pasm.spin
+    Filename: display.oled.us2066.i2c.spin
     Author: Jesse Burt
     Description: I2C driver for US2066-based OLED
         alphanumeric displays
