@@ -793,58 +793,6 @@ PUB VcomhDeselectLev(level)
  
     writeRegX (TRANSTYPE_CMD, 1, CMDSET_OLED, core#SET_VCOMH_DESEL, _vcomh_des_lvl)
 
-PRI cmd_Ext(cmd, extReg_IS) | cmd_packet[2]
-'' Access Extended Command Set
-'' Single-byte commands
-'' Flags: RE = 1, IS = 0 or 1
-    cmd_packet.word[0] := CMD_HDR | _sa0_addr
-    cmd_packet.byte[2] := core#CMDSET_EXTENDED | _disp_lines_N | _dblht_en | extReg_IS
-    cmd_packet.byte[3] := core#CTRLBYTE_CMD
-    cmd_packet.byte[4] := cmd
-    cmd_packet.byte[5] := core#CTRLBYTE_CMD
-    cmd_packet.byte[6] := (core#CMDSET_FUNDAMENTAL | _disp_lines_N | _dblht_en)
-
-'    WriteX (@cmd_packet, 7)
-
-PRI cmd8_Ext(cmd, val) | cmd_packet[3]
-'' Access Extended Command Set
-'' Two-byte commands
-'' Flags: RE = 1, IS = 0
-    cmd_packet.word[0] := CMD_HDR | _sa0_addr
-    cmd_packet.byte[2] := core#CMDSET_EXTENDED | _disp_lines_N | _dblht_en
-    cmd_packet.byte[3] := core#CTRLBYTE_CMD
-    cmd_packet.byte[4] := cmd
-    cmd_packet.byte[5] := core#CTRLBYTE_DATA
-    cmd_packet.byte[6] := val
-    cmd_packet.byte[7] := core#CTRLBYTE_CMD
-    cmd_packet.byte[8] := core#CMDSET_FUNDAMENTAL | _disp_lines_N | _dblht_en
-
-'    WriteX (@cmd_packet, 9)
-
-PRI cmd8_OLED(cmd, val) | cmd_packet[4]
-'' Access OLED Characterization Command Set
-'' Two-byte commands
-'' Flags: RE = 1, IS = 0, SD = 1
-    cmd_packet.word[0] := CMD_HDR | _sa0_addr
-    cmd_packet.byte[2] := core#CMDSET_EXTENDED | _disp_lines_N | _dblht_en
-    cmd_packet.byte[3] := core#CTRLBYTE_CMD
-    cmd_packet.byte[4] := core#OLED_CMDSET_ENA
-    cmd_packet.byte[5] := core#CTRLBYTE_CMD
-    cmd_packet.byte[6] := cmd
-    cmd_packet.byte[7] := core#CTRLBYTE_CMD
-    cmd_packet.byte[8] := val
-    cmd_packet.byte[9] := core#CTRLBYTE_CMD
-    cmd_packet.byte[10] := core#OLED_CMDSET_DIS
-    cmd_packet.byte[11] := core#CTRLBYTE_CMD
-    cmd_packet.byte[12] := core#CMDSET_FUNDAMENTAL | _disp_lines_N | _dblht_en
-
-'    WriteX (@cmd_packet, 13)
-
-PRI cmd_Fund(cmd) | ackbit, cmd_packet
-'' Fundamental Command Set
-    cmd_packet := (cmd << 16) | (CMD_HDR | _sa0_addr)
-'    WriteX (@cmd_packet, 3)
-
 PRI wrdata(databyte) | cmd_packet
 '' Write bytes with the DATA control byte set
     cmd_packet.byte[0] := SLAVE_WR | _sa0_addr
@@ -854,7 +802,7 @@ PRI wrdata(databyte) | cmd_packet
     i2c.start
     i2c.wr_block (@cmd_packet, 3)
     i2c.stop
-  
+
 PUB readRegX(reg, bytes, dest) | cmd_packet
 
     case reg
