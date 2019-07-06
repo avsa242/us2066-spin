@@ -15,8 +15,8 @@ CON
     _clkmode    = cfg#_clkmode
     _xinfreq    = cfg#_xinfreq
 
-    WIDTH       = 16        'Your display's dimensions, in character cells
-    HEIGHT      = 2
+    WIDTH       = 20        'Your display's dimensions, in character cells
+    HEIGHT      = 4
 
     RESET_PIN   = 25        'I/O pin attached to display's RESET pin
 
@@ -286,7 +286,7 @@ PUB Mirror_Demo | row
         2:
             row := 2
         4:
-            row := 3
+            row := 0
     oled.MirrorH (FALSE)
     oled.MirrorV (FALSE)
     oled.ClearLine (0)
@@ -297,7 +297,7 @@ PUB Mirror_Demo | row
     oled.MirrorH (TRUE)
     oled.MirrorV (FALSE)
     oled.ClearLine (0)
-    oled.Position (WIDTH-12, 0)
+    oled.Position (WIDTH-13, 0)
     oled.Str (string("Mirror HORIZ."))
     time.Sleep (2)
 
@@ -311,7 +311,7 @@ PUB Mirror_Demo | row
     oled.MirrorH (TRUE)
     oled.MirrorV (TRUE)
     oled.ClearLine (0)
-    oled.Position (WIDTH-12, row)
+    oled.Position (WIDTH-13, row)
     oled.Str (string("Mirror BOTH"))
     time.Sleep (2)
 
