@@ -375,6 +375,27 @@ PUB ClearLN(line)
         repeat 20
             Char(" ")
 
+PUB ClkFrq(frequency, divisor)
+' Set display clock oscillator frequency in kHz, and divide ratio
+'   Valid values:
+'       frequency:   Range 454..556 (see lookup tables below for specific values)
+'       divisor:     Range 1..16 (POR 1)
+'   Any other value returns the current setting
+    case frequency := lookdown(frequency: 54, 460, 467, 474, 481, 488, 494, 501, 508, 515, 522, 528, 535, 542, 549, 556)
+        1..16:
+            _frequency := frequency << 4
+        OTHER:
+            result := _frequency >> 4
+            result := lookupz(result: 54, 460, 467, 474, 481, 488, 494, 501, 508, 515, 522, 528, 535, 542, 549, 556)
+
+    case divisor
+        1..16:
+            _divisor := divisor - 1
+        OTHER:
+            return _divisor + 1
+
+    writeRegX (TRANSTYPE_CMD, 1, CMDSET_OLED, core#DISP_CLKDIV_OSC, _frequency | _divisor)
+
 PUB Contrast(level)
 '' Set display contrast level
 '' level: 00..$FF
@@ -730,20 +751,6 @@ PUB Cursor(type)
 
     writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, core#DISPLAY_ONOFF | _disp_en | _cursor_en | _blink_en, 0)
     CursorInvert (_cursor_invert >> 1)
-
-PUB SetupOsc(frequency, divisor)
-'' Set display clock oscillator frequency and divide ratio
-'' frequency:   Range 0..15 (POR 7)
-'' divisor:     Range 1..16 (POR 1)
-    case frequency
-        0..15: _frequency := frequency << 4
-        OTHER: return
-
-    case divisor
-        1..16: _divisor := divisor - 1
-        OTHER: return
-
-    writeRegX (TRANSTYPE_CMD, 1, CMDSET_OLED, core#DISP_CLKDIV_OSC, _frequency | _divisor)
 
 PUB Str(stringptr)
 '' Display zero-terminated string (use if you want to be able to use newline characters in the string)
