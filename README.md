@@ -8,7 +8,7 @@ This is a P8X32A/Propeller driver object for US2066-based alphanumeric OLED disp
 
 ## Salient Features
 
-* I2C connection up to 400kHz
+* I2C connection up to 400kHz (datasheet official max. - tested at 1MHz with no problems - YMMV)
 * API compatible with display.lcd.serial
 * Set contrast level
 * Set cursor attributes: blinking, inverted, shape

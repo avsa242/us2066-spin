@@ -15,13 +15,17 @@ CON
     _clkmode    = cfg#_clkmode
     _xinfreq    = cfg#_xinfreq
 
-    WIDTH       = 20        'Your display's dimensions, in character cells
+    WIDTH       = 20        ' Your display's dimensions, in character cells
     HEIGHT      = 4
 
-    RESET_PIN   = 25        'I/O pin attached to display's RESET pin
+    SCL_PIN     = 28
+    SDA_PIN     = 29
+    RESET_PIN   = 25        ' I/O pin attached to display's RESET pin
+    I2C_HZ      = 400_000
+    SLAVE_BIT   = 0         ' Default slave address
 
-    DEMO_DELAY  = 2         'Delay (sec) between different demos
-    MODE_DELAY  = 1         'Delay (sec) between different modes within a particular demo
+    DEMO_DELAY  = 2         ' Delay (sec) between different demos
+    MODE_DELAY  = 1         ' Delay (sec) between different modes within a particular demo
 
     LED         = cfg#LED1
 
@@ -114,14 +118,12 @@ PUB Count_Demo | i
             time.Sleep (3)
             oled.Clear
             oled.Str (string("Compare to LCD!:", oled#NL, "i = "))
-
             repeat i from 0 to 3000
                 oled.Position (4, 1)
                 oled.Str (int.Dec (i))
         4:
             oled.Position (0, 0)
             oled.Str (string("Rapidly changing", oled#NL, "display contents", oled#NL, "(compare to LCD!)", oled#NL, "i = "))
-
             repeat i from 0 to 3000
                 oled.Position (4, 3)
                 oled.Str (int.Dec (i))
@@ -338,8 +340,8 @@ PUB Setup
     repeat until ser.Start (115_200)
     ser.Clear
     ser.Str (string("Serial terminal started", ser#NL))
-    if oled.Start (RESET_PIN)                                          'Change RESET CONstant at the top of this file to match your connection
-'    if oled.Startx (SCL_PIN, SDA_PIN, RESET_PIN, I2C_HZ, SLAVE_BIT)   'Alternatively, Use this line instead of the above to use all custom settings
+'    if oled.Start (RESET_PIN)                                          'Change RESET CONstant at the top of this file to match your connection
+    if oled.Startx (SCL_PIN, SDA_PIN, RESET_PIN, I2C_HZ, SLAVE_BIT)   'Alternatively, Use this line instead of the above to use all custom settings
 
         ser.Str (string("us2066 object started", ser#NL))
     else
