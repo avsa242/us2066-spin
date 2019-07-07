@@ -2,7 +2,9 @@
 ---------------
 
 This is a P8X32A/Propeller driver object for US2066-based alphanumeric OLED displays, such as:
-[Newhaven Display's NHD-0420-CW-Ax3 series](http://www.newhavendisplay.com/nhd0420cway3-p-7829.html)
+
+[Newhaven Display's NHD-0420-CW-Ax3 series](https://www.newhavendisplay.com/nhd0420cway3-p-7829.html)
+[Newhaven Display's NHD-0216-CW-Ax3 series](https://www.newhavendisplay.com/nhd0216cwaw3-p-9585.html)
 
 ## Salient Features
 
@@ -10,7 +12,7 @@ This is a P8X32A/Propeller driver object for US2066-based alphanumeric OLED disp
 * API compatible with display.lcd.serial
 * Set contrast level
 * Set cursor attributes: blinking, inverted, shape
-* Set text attributes: double-height. 5 and 6-pixel width text
+* Set text attributes: double-height, 5 and 6-pixel width text
 * Inverted/normal display
 * Display mirroring (horizontal/vertical/both)
 
