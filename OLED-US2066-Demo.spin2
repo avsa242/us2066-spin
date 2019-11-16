@@ -108,8 +108,8 @@ PUB Contrast_Demo | i
                 oled.Position (7, 1)
                 oled.Contrast (||i)
                 oled.Str (int.DecPadded (||i, 3))
-                oled.Char_Literal (32)
-                oled.Str (int.Hex(||i, 2))
+'                oled.Char_Literal (32)
+'                oled.Str (int.Hex(||i, 2))
                 time.MSleep (10)
         4:
             oled.Newline
