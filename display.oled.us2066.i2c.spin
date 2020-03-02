@@ -127,8 +127,7 @@ PUB Stop
 
 PUB finalize
 ' Alias for Stop
-    EnableDisplay (FALSE)
-    i2c.terminate
+    Stop
 
 PUB Defaults2x16
 ' Set some sane defaults
@@ -304,21 +303,7 @@ PUB Char(ch)
 
 PUB PutC(ch)
 ' Alias for Char
-    case ch
-        7:
-            InvertDisplay (TRUE)
-            time.MSleep (50)
-            InvertDisplay (FALSE)
-        8, $7F:
-            Backspace
-        10:
-            CarriageReturn
-        12:
-            Clear
-        13:
-            Newline
-        OTHER:
-            wrdata(ch)
+    Char(ch)
 
 PUB Char_Literal(ch)
 ' Display single character
@@ -363,7 +348,7 @@ PUB Clear
 
 PUB CLS
 ' Alias for Clear
-    writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, core#CLEAR_DISPLAY, 0)
+    Clear
 
 PUB ClearLine(line)
 ' Clear specified line
@@ -376,10 +361,7 @@ PUB ClearLine(line)
 
 PUB ClearLN(line)
 ' Alias for ClearLine
-    if lookdown (line: 0..3)
-        Position(0, line)
-        repeat 20
-            Char(" ")
+    ClearLine(line)
 
 PUB ClkFrq(frequency, divisor)
 ' Set display clock oscillator frequency in kHz, and divide ratio
@@ -535,13 +517,7 @@ PUB DoubleHeight(mode) | cmd_packet
 
 PUB EnableBacklight(enable)
 ' Alias for EnableDisplay
-    case ||enable
-        0: _disp_en := 0
-        1: _disp_en := core#DISP_ON
-        OTHER:
-            return _disp_en
-
-    writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, core#DISPLAY_ONOFF | _disp_en | _cursor_en | _blink_en, 0)
+    EnableDisplay(enable)
 
 PUB EnableDisplay(enable)
 ' Turn the display on or off
@@ -743,14 +719,7 @@ PUB Position(column, row) | offset
 
 PUB GotoXY(column, line) | offset
 ' Alias for Position
-    case column
-        0..19:
-            case line
-                0..3: offset := ($20 * line) + column <# ($20 * line) + $13
-                OTHER: return
-        OTHER: return
-
-    writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, core#SET_DDRAM_ADDR|offset, 0)
+    Position(column, line)
 
 PUB Reset
 ' Send reset signal to display controller
@@ -787,24 +756,7 @@ PUB SetCursor(type)
 
 PUB Cursor(type)
 ' Alias for SetCursor
-    case type
-        0:  _cursor_invert := _blink_en := _cursor_en := FALSE
-        1:
-            _cursor_en := core#CURSOR_OFF
-            _cursor_invert := core#CURSOR_INVERT
-            _blink_en := core#BLINK_ON
-        2:
-            _cursor_en := core#CURSOR_ON
-            _cursor_invert := core#CURSOR_NORMAL
-            _blink_en := core#BLINK_OFF
-        3:
-            _cursor_en := core#CURSOR_ON
-            _cursor_invert := core#CURSOR_NORMAL
-            _blink_en := core#BLINK_ON
-        OTHER: return
-
-    writeRegX (TRANSTYPE_CMD, 0, CMDSET_FUND, core#DISPLAY_ONOFF | _disp_en | _cursor_en | _blink_en, 0)
-    CursorInvert (_cursor_invert >> 1)
+    SetCursor(type)
 
 PUB Str(stringptr)
 ' Display zero-terminated string
