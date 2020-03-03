@@ -302,10 +302,6 @@ PUB Char(ch)
         OTHER:
             wrdata(ch)
 
-PUB PutC(ch)
-' Alias for Char
-    Char(ch)
-
 PUB Char_Literal(ch)
 ' Display single character
 '   NOTE: Control codes will not be processed, but will be displayed
@@ -347,10 +343,6 @@ PUB Clear
 ' Clear display
     writeReg (TRANSTYPE_CMD, 0, CMDSET_FUND, core#CLEAR_DISPLAY, 0)
 
-PUB CLS
-' Alias for Clear
-    Clear
-
 PUB ClearLine(line)
 ' Clear specified line
 '   Valid values: 0..3
@@ -386,6 +378,10 @@ PUB ClkFrq(frequency, divisor)
 
     writeReg (TRANSTYPE_CMD, 1, CMDSET_OLED, core#DISP_CLKDIV_OSC, _frequency | _divisor)
 
+PUB CLS
+' Alias for Clear
+    Clear
+
 PUB COMLogicHighLevel(level)
 ' Set COMmon pins high logic level, relative to Vcc
 '   Valid values:
@@ -413,6 +409,10 @@ PUB Contrast(level)
             return _contrast
 
     writeReg (TRANSTYPE_CMD, 1, CMDSET_OLED, core#SET_CONTRAST, _contrast)
+
+PUB Cursor(type)
+' Alias for SetCursor
+    SetCursor(type)
 
 PUB CursorBlink(enable)
 ' Enable cursor blinking
@@ -620,6 +620,10 @@ PUB GetPos: addr | data_in
     addr := i2c.read (TRUE)
     i2c.stop
 
+PUB GotoXY(column, line) | offset
+' Alias for Position
+    Position(column, line)
+
 PUB GPIOState(state)
 ' Set state of GPIO pin
 '   Valid values:
@@ -736,9 +740,9 @@ PUB Position(column, row) | offset
 
     writeReg (TRANSTYPE_CMD, 0, CMDSET_FUND, core#SET_DDRAM_ADDR|offset, 0)
 
-PUB GotoXY(column, line) | offset
-' Alias for Position
-    Position(column, line)
+PUB PutC(ch)
+' Alias for Char
+    Char(ch)
 
 PUB Reset
 ' Send reset signal to display controller
@@ -772,10 +776,6 @@ PUB SetCursor(type)
 
     writeReg (TRANSTYPE_CMD, 0, CMDSET_FUND, core#DISPLAY_ONOFF | _disp_en | _cursor_en | _blink_en, 0)
     CursorInvert (_cursor_invert >> 1)
-
-PUB Cursor(type)
-' Alias for SetCursor
-    SetCursor(type)
 
 PUB Str(stringptr)
 ' Display zero-terminated string
