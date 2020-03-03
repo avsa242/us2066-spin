@@ -821,7 +821,7 @@ PRI wrdata(databyte) | cmd_packet
     i2c.wr_block (@cmd_packet, 3)
     i2c.stop
 
-PUB readRegX(reg, bytes, dest) | cmd_packet
+PUB readReg(reg, bytes, dest) | cmd_packet
 
     case reg
         0:
