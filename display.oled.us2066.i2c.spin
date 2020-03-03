@@ -375,6 +375,7 @@ PUB ClkFrq(frequency, divisor)
         OTHER:
             result := _frequency >> 4
             result := lookupz(result: 54, 460, 467, 474, 481, 488, 494, 501, 508, 515, 522, 528, 535, 542, 549, 556)
+            return
 
     case divisor
         1..16:
