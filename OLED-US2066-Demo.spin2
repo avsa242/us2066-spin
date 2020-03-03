@@ -40,8 +40,6 @@ CON
     DEMO_DELAY  = 2         ' Delay (sec) between different demos
     MODE_DELAY  = 1         ' Delay (sec) between different modes within a particular demo
 
-    LED         = cfg#LED1
-
 VAR
 
     byte _ser_cog
@@ -361,9 +359,9 @@ PUB Setup
     ser.PrintF("Serial terminal started\n")
 
     if oled.Start (SCL_PIN, SDA_PIN, RESET_PIN, I2C_HZ, SLAVE_BIT)
-        ser.PrintF("us2066 object started\n")
+        ser.PrintF("US2066 driver started\n")
     else
-        ser.PrintF("us2066 object failed to start\n")
+        ser.PrintF("US2066 driver failed to start - halting\n")
         oled.stop
         time.MSleep (500)
         FlashLED (cfg#LED1, 500)
@@ -375,12 +373,7 @@ PUB Setup
     oled.EnableDisplay (TRUE)
     time.MSleep (100)
 
-PUB FlashLED(led_pin, delay_ms)
-
-    io.Output(led_pin)
-    repeat
-        io.Toggle(led_pin)
-        time.MSleep(delay_ms)
+#include "lib.utility.spin2"
 
 DAT
 

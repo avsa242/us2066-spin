@@ -5,8 +5,8 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for US2066-base
 
 ## Salient Features
 
-* I2C connection up to 400kHz
-* API compatible with display.lcd.serial
+* I2C connection at up to 400kHz
+* API compatible with display.lcd.serial, for easier transition
 * Set contrast level
 * Set cursor attributes: blinking, inverted, shape
 * Set text attributes: double-height, 5 and 6-pixel width text
@@ -21,7 +21,7 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for US2066-base
 ## Compiler Compatibility
 
 * P1: OpenSpin (tested with 1.00.81)
-* P2: FastSpin (tested with 4.0.3-beta)
+* P2: FastSpin (tested with 4.1.0-beta)
 
 ## Limitations
 

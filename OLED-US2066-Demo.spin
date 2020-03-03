@@ -4,9 +4,9 @@
     Description: Demonstrates functionality of the
      US2066 OLED Display object
     Author: Jesse Burt
-    Copyright (c) 2018
+    Copyright (c) 2020
     Created Dec 30, 2017
-    Updated Jul 6, 2019
+    Updated Mar 3, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -14,6 +14,11 @@ CON
 
     _clkmode    = cfg#_clkmode
     _xinfreq    = cfg#_xinfreq
+
+    LED         = cfg#LED1
+    SER_RX      = 31
+    SER_TX      = 30
+    SER_BAUD    = 115_200
 
     WIDTH       = 20        ' Your display's dimensions, in character cells
     HEIGHT      = 4
@@ -27,15 +32,18 @@ CON
     DEMO_DELAY  = 2         ' Delay (sec) between different demos
     MODE_DELAY  = 1         ' Delay (sec) between different modes within a particular demo
 
-    LED         = cfg#LED1
+VAR
+
+    byte _ser_cog
 
 OBJ
 
     cfg : "core.con.boardcfg.flip"
     time: "time"
+    io  : "io"
     oled: "display.oled.us2066.i2c"
     int : "string.integer"
-    ser : "com.serial.terminal"
+    ser : "com.serial.terminal.ansi"
 
 PUB Main
 
@@ -78,7 +86,7 @@ PUB Main
     oled.Clear
 
     oled.Stop
-    Flash (LED, 100)
+    FlashLED (LED, 100)
 
 PUB Contrast_Demo | i
 
@@ -337,19 +345,19 @@ PUB Position_Demo | x, y
 
 PUB Setup
 
-    repeat until ser.Start (115_200)
+    repeat until _ser_cog := ser.StartRXTX (SER_RX, SER_TX, 0, SER_BAUD)
+    time.MSleep(30)
     ser.Clear
-    ser.Str (string("Serial terminal started", ser#NL))
-'    if oled.Start (RESET_PIN)                                          'Change RESET CONstant at the top of this file to match your connection
-    if oled.Startx (SCL_PIN, SDA_PIN, RESET_PIN, I2C_HZ, SLAVE_BIT)   'Alternatively, Use this line instead of the above to use all custom settings
-
-        ser.Str (string("us2066 object started", ser#NL))
+    ser.Str (string("Serial terminal started", ser#CR, ser#LF))
+'    if oled.Start (RESET_PIN)                                        ' Use default I2C I/O pin and freq. settings. Just specify RESET_PIN
+    if oled.Startx (SCL_PIN, SDA_PIN, RESET_PIN, I2C_HZ, SLAVE_BIT)   ' Use this line instead of the above to use all custom settings
+        ser.Str (string("US2066 driver started", ser#CR, ser#LF))
     else
-        ser.Str (string("us2066 object failed to start", ser#NL))
+        ser.Str (string("US2066 driver failed to start - halting", ser#CR, ser#LF))
         oled.stop
         time.MSleep (500)
         ser.Stop
-        Flash (cfg#LED1, 500)
+        FlashLED (cfg#LED1, 500)
 
     oled.MirrorH (FALSE)
     oled.MirrorV (FALSE)
@@ -358,12 +366,7 @@ PUB Setup
     oled.EnableDisplay (TRUE)
     time.MSleep (100)
 
-PUB Flash(led_pin, delay_ms)
-
-    dira[led_pin] := 1
-    repeat
-        !outa[led_pin]
-        time.MSleep (delay_ms)
+#include "lib.utility.spin"
 
 DAT
 

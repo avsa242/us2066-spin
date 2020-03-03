@@ -305,6 +305,7 @@ PUB Char(ch)
 PUB Char_Literal(ch)
 ' Display single character
 '   NOTE: Control codes will not be processed, but will be displayed
+    ch &= $FF
     wrdata(ch)
 
 PUB CharGen(count)
@@ -620,7 +621,7 @@ PUB GetPos: addr | data_in
     addr := i2c.read (TRUE)
     i2c.stop
 
-PUB GotoXY(column, line) | offset
+PUB GotoXY(column, line)
 ' Alias for Position
     Position(column, line)
 
@@ -748,6 +749,7 @@ PUB Reset
 ' Send reset signal to display controller
     io.Output(_reset)
     io.Low(_reset)
+    time.USleep(core#TRES)
     io.High(_reset)
     time.MSleep (1)
 
