@@ -4,9 +4,9 @@
     Author: Jesse Burt
     Description: I2C driver for US2066-based OLED
         alphanumeric displays
-    Copyright (c) 2018
+    Copyright (c) 2020
     Created Dec 30, 2017
-    Updated Jul 6, 2019
+    Updated Mar 3, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -19,7 +19,7 @@ CON
 
     DEF_SCL         = 28
     DEF_SDA         = 29
-    DEF_HZ          = core#I2C_MAX_FREQ
+    DEF_HZ          = 400_000
     I2C_MAX_FREQ    = core#I2C_MAX_FREQ
 
 ' Build some basic headers for I2C transactions
@@ -86,6 +86,7 @@ OBJ
     i2c     : "com.i2c"
     core    : "core.con.us2066"
     time    : "time"
+    io      : "io"
 
 PUB Null
 ' This is not a top-level object
@@ -114,7 +115,7 @@ PUB Startx(SCL_PIN, SDA_PIN, RESET_PIN, I2C_HZ, SLAVE_BIT): okay
                             return FALSE
                 Reset
                 Defaults4x20
-                if PartID == $21
+                if DeviceID == core#DEVID_RESP
                     return okay
                 else
                     return FALSE
@@ -385,6 +386,23 @@ PUB ClkFrq(frequency, divisor)
 
     writeReg (TRANSTYPE_CMD, 1, CMDSET_OLED, core#DISP_CLKDIV_OSC, _frequency | _divisor)
 
+PUB COMLogicHighLevel(level)
+' Set COMmon pins high logic level, relative to Vcc
+'   Valid values:
+'       0_65: 0.65 * Vcc
+'       0_71: 0.71 * Vcc
+'      *0_77: 0.77 * Vcc
+'       0_83: 0.83 * Vcc
+'       1_00: 1.00 * Vcc
+    case level
+        0_65, 0_71, 0_77, 0_83, 1_00:
+            _vcomh_des_lvl := lookdownz(level: 0_65, 0_71, 0_77, 0_83, 1_00) << 4
+        OTHER:
+            result := lookupz(_vcomh_des_lvl >> 4: 0_65, 0_71, 0_77, 0_83, 1_00)
+            return
+
+    writeReg (TRANSTYPE_CMD, 1, CMDSET_OLED, core#SET_VCOMH_DESEL, _vcomh_des_lvl)
+
 PUB Contrast(level)
 ' Set display contrast level
 '   Valid values: 0..127 (POR: 127)
@@ -423,6 +441,17 @@ PUB CursorInvert(enable)
             return _cursor_invert
 
     writeReg (TRANSTYPE_CMD, 1, CMDSET_EXTD, core#EXTENDED_FUNCSET | _fontwidth | _cursor_invert | _disp_lines_NW, 0)
+
+PUB DeviceID
+' Read device ID
+'   Returns: $21 if successful
+    writeReg (TRANSTYPE_CMD, 0, CMDSET_FUND, $00, 0)
+
+    i2c.start
+    i2c.write (SLAVE_RD | _sa0_addr)
+    i2c.read (FALSE)          'First read gets the address counter register - throw it away
+    result := i2c.read (i2c#NAK)    'Second read gets the Part ID
+    i2c.stop
 
 PUB DisplayBlink(delay)
 ' Gradually fade out/in display
@@ -489,7 +518,7 @@ PUB DisplayShift(direction)
 
     writeReg (TRANSTYPE_CMD, 0, CMDSET_FUND, core#CURS_DISP_SHIFT | direction, 0)
 
-PUB DoubleHeight(mode) | cmd_packet
+PUB DoubleHeight(mode)
 ' Set double-height font style mode
 '   Valid values:
 '      *0: Standard height font all 4 lines / double-height disabled
@@ -653,7 +682,7 @@ PUB MirrorV(enable)
     writeReg (TRANSTYPE_CMD, 1, CMDSET_EXTD, core#ENTRY_MODE_SET | _mirror_h | _mirror_v, 0)
 
 PUB Newline: row | pos
-' Query the controller for the current cursor position in DDRAM and increment the row (wrapping to row 0)
+' Move cursor position to first column of next line
     pos := GetPos
     case pos
         $00..$13: row := 0
@@ -664,17 +693,6 @@ PUB Newline: row | pos
 
     row := (row + 1) <# 3
     Position (0, row)
-
-PUB PartID: pid
-' Get Part ID
-'   Returns: $21 if successful
-    writeReg (TRANSTYPE_CMD, 0, CMDSET_FUND, $00, 0)
-
-    i2c.start
-    i2c.write (SLAVE_RD | _sa0_addr)
-    i2c.read (FALSE)          'First read gets the address counter register - throw it away
-    pid := i2c.read (TRUE)    'Second read gets the Part ID
-    i2c.stop
 
 PUB PinCfg(cfg)
 ' Change mapping between display data column address and segment driver.
@@ -724,9 +742,9 @@ PUB GotoXY(column, line) | offset
 
 PUB Reset
 ' Send reset signal to display controller
-    dira[_reset] := 1
-    outa[_reset] := 0
-    outa[_reset] := 1
+    io.Output(_reset)
+    io.Low(_reset)
+    io.High(_reset)
     time.MSleep (1)
 
 PUB SetCursor(type)
@@ -797,20 +815,6 @@ PUB TextDirection(direction)
 
     writeReg (TRANSTYPE_CMD, 1, CMDSET_OLED, core#SET_SEG_PINS, _seg_remap | _seg_pincfg)
 
-PUB VcomhDeselectLev(level)
-' Adjust Vcomh regulator output
-' 0: ~0.65*Vcc
-' 1: ~0.71*Vcc
-' 2: ~0.77*Vcc
-' 3: ~0.83*Vcc
-' 4: 1*Vcc
-' POR: 2
-    case level
-        0..4: _vcomh_des_lvl := level << 4
-        OTHER: return
- 
-    writeReg (TRANSTYPE_CMD, 1, CMDSET_OLED, core#SET_VCOMH_DESEL, _vcomh_des_lvl)
-
 PRI wrdata(databyte) | cmd_packet
 ' Write bytes with the DATA control byte set
     cmd_packet.byte[0] := SLAVE_WR | _sa0_addr
@@ -821,7 +825,7 @@ PRI wrdata(databyte) | cmd_packet
     i2c.wr_block (@cmd_packet, 3)
     i2c.stop
 
-PUB readReg(reg, bytes, dest) | cmd_packet
+PRI readReg(reg, bytes, dest) | cmd_packet
 
     case reg
         0:
