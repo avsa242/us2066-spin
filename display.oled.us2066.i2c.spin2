@@ -6,7 +6,7 @@
         alphanumeric displays (P2 version)
     Copyright (c) 2020
     Created Nov 16, 2019
-    Updated Mar 3, 2020
+    Updated May 13, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -101,7 +101,7 @@ PUB Start(SCL_PIN, SDA_PIN, RESET_PIN, I2C_HZ, SLAVE_BIT=0): okay
             if okay := i2c.Setup (SCL_PIN, SDA_PIN, I2C_HZ)    'I2C Object Started?
                 time.MSleep (1)
                 _reset := RESET_PIN
-                case ||slave_bit
+                case abs(slave_bit)
                         1: _sa0_addr := 1 << 1
                         0: _sa0_addr := 0
                         OTHER:
@@ -407,13 +407,13 @@ PUB Cursor(type)
 ' Alias for SetCursor
     SetCursor(type)
 
-PUB CursorBlink(enable)
+PUB CursorBlink(enabled)
 ' Enable cursor blinking
 '   Valid values:
 '      *FALSE (0): Steady cursor
 '       TRUE (-1 or 1): Blinking cursor
 '   Any other value returns the current setting
-    case ||enable
+    case abs(enabled)
         0: _blink_en := core#BLINK_OFF
         1: _blink_en := core#BLINK_ON
         OTHER:
@@ -421,13 +421,13 @@ PUB CursorBlink(enable)
 
     writeReg (TRANSTYPE_CMD, 0, CMDSET_FUND, core#DISPLAY_ONOFF | _disp_en | _cursor_en | _blink_en, 0)
 
-PUB CursorInvert(enable)
+PUB CursorInvert(enabled)
 ' Invert cursor
 '   Valid values:
 '      *FALSE (0): Normal cursor
 '       TRUE (-1 or 1): Inverted cursor
 '   Any other value returns the current setting
-    case ||enable
+    case abs(enabled)
         1: _cursor_invert := core#CURSOR_INVERT
         0: _cursor_invert := core#CURSOR_NORMAL
         OTHER:
@@ -542,14 +542,14 @@ PUB EnableBacklight(enable)
 ' Alias for EnableDisplay
     EnableDisplay(enable)
 
-PUB EnableDisplay(enable)
+PUB EnableDisplay(enabled)
 ' Turn the display on or off
 '   Valid values:
 '       FALSE (0): Display off
 '       TRUE (-1 or 1): Display on
 '   Any other value returns the current setting
 '   NOTE: Does not affect display contents
-    case ||enable
+    case abs(enabled)
         0: _disp_en := 0
         1: _disp_en := core#DISP_ON
         OTHER:
@@ -572,7 +572,7 @@ PUB EnableExtVSL(enabled)
 '      *FALSE (0): Disable
 '       TRUE (-1 or 1): Enable
 '   Any other value returns the current setting
-    case ||enabled
+    case abs(enabled)
         1: _ext_vsl := core#VSL_EXTERNAL
         0: _ext_vsl := core#VSL_INTERNAL
         OTHER:
@@ -580,13 +580,13 @@ PUB EnableExtVSL(enabled)
 
     writeReg (TRANSTYPE_CMD, 1, CMDSET_OLED, core#FUNCTION_SEL_C, _ext_vsl | _gpio_state)
 
-PUB EnableInternalReg(enable)
+PUB EnableInternalReg(enabled)
 ' Enable internal regulator
 '   Valid values:
 '      *TRUE (-1 or 1): Enable (use for 5V operation)
 '       FALSE (0): Disable (3.3V/low-voltage operation)
 '   Any other value is ignored
-    case ||enable
+    case abs(enabled)
         0:
         1: enable := core#INT_REG_ENABLE
         OTHER: return
@@ -639,14 +639,14 @@ PUB Home
 '   NOTE: Doesn't clear the display
     writeReg (TRANSTYPE_CMD, 0, CMDSET_FUND, core#HOME_DISPLAY, 0)
 
-PUB InvertDisplay(enable)
+PUB InvertDisplay(enabled)
 ' Invert display
 '   Valid values: TRUE (-1 or 1), FALSE (0)
 '   Any other value returns the current setting
 '   NOTE:
 '       1. Takes effect immediately
 '       2. Display will appear dimmer, overall, when inverted
-    case ||enable
+    case abs(enabled)
         1: _disp_invert := core#REVERSE_DISPLAY
         0: _disp_invert := core#NORMAL_DISPLAY
         OTHER:
@@ -654,11 +654,11 @@ PUB InvertDisplay(enable)
 
     writeReg (TRANSTYPE_CMD, 1, CMDSET_EXTD, core#FUNCTION_SET_1 | _cgram_blink | _disp_invert, 0)
 
-PUB MirrorH(enable)
+PUB MirrorH(enabled)
 ' Mirror display, horizontally
 '   Valid values: TRUE (-1 or 1), FALSE (0)
 '   Any other value returns the current setting
-    case ||enable
+    case abs(enabled)
         0: _mirror_h := core#SEG99_0
         1: _mirror_h := core#SEG0_99
         OTHER:
@@ -666,11 +666,11 @@ PUB MirrorH(enable)
 
     writeReg (TRANSTYPE_CMD, 1, CMDSET_EXTD, core#ENTRY_MODE_SET | _mirror_h | _mirror_v, 0)
 
-PUB MirrorV(enable)
+PUB MirrorV(enabled)
 ' Mirror display, vertically
 '   Valid values: TRUE (-1 or 1), FALSE (0)
 '   Any other value returns the current setting
-    case ||enable
+    case abs(enabled)
         0: _mirror_v := core#COM0_31
         1: _mirror_v := core#COM31_0
         OTHER:
@@ -820,9 +820,9 @@ PRI wrdata(databyte) | cmd_packet, tmp
         i2c.Write(cmd_packet.byte[tmp])
     i2c.Stop
 
-PRI readReg(reg, nr_bytes, buff_addr) | cmd_packet, tmp
+PRI readReg(reg_nr, nr_bytes, buff_addr) | cmd_packet, tmp
 
-    case reg
+    case reg_nr
         0:
             i2c.Start
             i2c.Write (SLAVE_RD | _sa0_addr)
