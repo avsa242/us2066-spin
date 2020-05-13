@@ -17,7 +17,7 @@ CON
     SLAVE_RD        = SLAVE_WR|1
     R               = %1
 
-    DEF_HZ          = 400_000
+    DEF_HZ          = 100_000
     I2C_MAX_FREQ    = core#I2C_MAX_FREQ
 
 ' Build some basic headers for I2C transactions
