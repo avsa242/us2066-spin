@@ -6,12 +6,12 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for US2066-base
 ## Salient Features
 
 * I2C connection at up to 400kHz
-* API compatible with display.lcd.serial, for easier transition
 * Set contrast level
 * Set cursor attributes: blinking, inverted, shape
 * Set text attributes: double-height, 5 and 6-pixel width text
 * Inverted/normal display
 * Display mirroring (horizontal/vertical/both)
+* Uses lib.terminal for standard terminal routines
 
 ## Requirements
 
@@ -21,17 +21,16 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for US2066-base
 ## Compiler Compatibility
 
 * P1: OpenSpin (tested with 1.00.81)
-* P2: FastSpin (tested with 4.1.0-beta)
+* P2: FastSpin (tested with 4.1.10-beta)
 
 ## Limitations
 
-* Support for different display dimensions (e.g., 2x16, 4x20) is limited
 * No scrolling support (chipset has horizontal scrolling support)
 * No support for custom characters
+* No support for parallel interface (not planned)
 
 ## TODO
 
-- [ ] Review API to see if it makes sense to make some methods PRI
 - [ ] Customer character sets
 - [ ] Scrolling support
 - [ ] SPI variant
