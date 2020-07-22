@@ -153,7 +153,7 @@ CON
         FADE_OUT_ENA    = %10 << 4
         BLINK_ENA       = %11 << 4
 
-#ifndef __propeller2
+#ifndef __propeller2__
 PUB Null
 '' This is not a top-level object
 #endif
