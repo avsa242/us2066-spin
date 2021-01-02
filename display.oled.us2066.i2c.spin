@@ -16,7 +16,7 @@ CON
 ' I2C Defaults
     SLAVE_WR        = core#SLAVE_ADDR
     SLAVE_RD        = SLAVE_WR|1
-    R               = %1
+    R               = 1
 
     DEF_SCL         = 28
     DEF_SDA         = 29
@@ -104,7 +104,7 @@ PUB Startx(SCL_PIN, SDA_PIN, RST_PIN, I2C_HZ, ADDR_BIT): okay
                         other:
                             _sa0_addr := 1 << 1
                 reset{}
-                defaults4x20
+                defaults4x20{}
                 if deviceid{} == core#DEVID_RESP
                     return okay
     return FALSE                                ' something above failed
@@ -381,7 +381,7 @@ PUB ClockDiv(divider): curr_div
     writereg(TRANSTYPE_CMD, 1, CMDSET_OLED, core#DISP_CLKDIV_OSC,{
 }   _frequency | _divider)
 
-PUB COMLogicHighLevel(level)
+PUB COMLogicHighLevel(level): curr_lvl
 ' Set COMmon pins high logic level, relative to Vcc
 '   Valid values:
 '       0_65: 0.65 * Vcc
@@ -499,7 +499,7 @@ PUB DisplayBlink(delay): curr_dly
 
     writereg(TRANSTYPE_CMD, 1, CMDSET_OLED, core#FADEOUT_BLINK, _fadeblink)
 
-PUB DisplayFade(delay)
+PUB DisplayFade(delay): curr_dly
 ' Gradually fade out display (just once)
 '   Valid values:
 '       0..128, in multiples of 8

@@ -1,8 +1,7 @@
 {
     --------------------------------------------
     Filename: OLED-US2066-Demo.spin
-    Description: Demonstrates functionality of the
-     US2066 OLED Display object
+    Description: Demo of the US2066 driver
     Author: Jesse Burt
     Copyright (c) 2021
     Created Dec 30, 2017
@@ -66,11 +65,11 @@ PUB Main{}
     time.sleep(DEMO_DELAY)
     oled.clear{}
 
-    cursor_demo
+    cursor_demo{}
     time.sleep(DEMO_DELAY)
     oled.clear{}
 
-    invert_demo
+    invert_demo{}
     time.sleep(DEMO_DELAY)
     oled.clear{}
 
@@ -122,7 +121,7 @@ PUB Count_Demo{} | i
             oled.strln(string("Rapidly changing"))
             oled.strln(string("display contents"))
             time.sleep(3)
-            oled.clear
+            oled.clear{}
             oled.strln(string("Compare to LCD!"))
 
             repeat i from 0 to 3000
