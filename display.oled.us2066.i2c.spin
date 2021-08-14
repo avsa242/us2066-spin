@@ -6,7 +6,7 @@
         alphanumeric displays
     Copyright (c) 2021
     Created Dec 30, 2017
-    Updated May 18, 2021
+    Updated Aug 14, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -487,7 +487,7 @@ PUB DeviceID{}: id
     i2c.stop{}
 
 PUB DisplayBlink(delay): curr_dly
-' Gradually fade out/in display
+' Set time interval for display blink/gradual fade in/out, in number of frames
 '   Valid values:
 '       0..128, in multiples of 8
 '   Any other value returns the current setting
@@ -503,10 +503,11 @@ PUB DisplayBlink(delay): curr_dly
     writereg(TRANSTYPE_CMD, 1, CMDSET_OLED, core#FADEOUT_BLINK, _fadeblink)
 
 PUB DisplayFade(delay): curr_dly
-' Gradually fade out display (just once)
+' Set time interval for display fade out, in number of frames
 '   Valid values:
 '       0..128, in multiples of 8
 '   Any other value returns the current setting
+'   NOTE: The fade will occur only once
 '   NOTE: 0 effectively disables the function
     case delay
         0:
