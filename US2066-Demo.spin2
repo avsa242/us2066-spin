@@ -20,14 +20,14 @@ CON
     SER_BAUD    = 2_000_000
 
 ' uncomment one of the below pairs, depending on your display size
-    WIDTH       = 20
-    HEIGHT      = 4
-'    WIDTH       = 16
-'    HEIGHT      = 2
+'    WIDTH       = 20
+'    HEIGHT      = 4
+    WIDTH       = 16
+    HEIGHT      = 2
 
-    SCL_PIN     = 16
-    SDA_PIN     = 17
-    RESET_PIN   = 18        ' I/O pin attached to display's RESET pin
+    SCL_PIN     = 32
+    SDA_PIN     = 33
+    RESET_PIN   = 34        ' I/O pin attached to display's RESET pin
     I2C_HZ      = 400_000
     SLAVE_BIT   = 0         ' Default slave address
 ' --
@@ -353,7 +353,7 @@ PUB Setup()
 '    if oled.start(RESET_PIN)
 
     ' use all custom settings
-    if oled.startx(SCL_PIN, SDA_PIN, RESET_PIN, I2C_HZ, SLAVE_BIT)
+    if oled.startx(SCL_PIN, SDA_PIN, RESET_PIN, I2C_HZ, SLAVE_BIT, HEIGHT)
         ser.strln(string("US2066 driver started"))
     else
         ser.strln(string("US2066 driver failed to start - halting"))

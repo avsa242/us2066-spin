@@ -80,11 +80,11 @@ PUB Null{}
 ' This is not a top-level object
 
 PUB Start(RST_PIN): status
-' Use "standard" Propeller I2C pins, and 100kHz
+' Use "standard" Propeller I2C pins, and 100kHz, 4x20
 '   Specify reset pin
-    return startx(DEF_SCL, DEF_SDA, RST_PIN, core#I2C_MAX_FREQ, 0)
+    return startx(DEF_SCL, DEF_SDA, RST_PIN, core#I2C_MAX_FREQ, 0, 4)
 
-PUB Startx(SCL_PIN, SDA_PIN, RST_PIN, I2C_HZ, ADDR_BIT): status
+PUB Startx(SCL_PIN, SDA_PIN, RST_PIN, I2C_HZ, ADDR_BIT, DISP_LINES): status
 ' Start with custom settings
 '  SCL      - I2C Serial Clock pin
 '  SDA      - I2C Serial Data pin
@@ -92,7 +92,7 @@ PUB Startx(SCL_PIN, SDA_PIN, RST_PIN, I2C_HZ, ADDR_BIT): status
 '  I2C_H    - I2C Bus Frequency (max 400kHz)
 '  ADDR_BIT - Flag to indicate optional alternative slave address
     if lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31) and {
-}   I2C_HZ =< core#I2C_MAX_FREQ
+}   I2C_HZ =< core#I2C_MAX_FREQ and lookdown(DISP_LINES: 2, 4)
         if (status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ))
             time.usleep(core#T_POR)
             _reset := RST_PIN
@@ -101,8 +101,12 @@ PUB Startx(SCL_PIN, SDA_PIN, RST_PIN, I2C_HZ, ADDR_BIT): status
                         _sa0_addr := 0
                     other:
                         _sa0_addr := 1 << 1
+            if DISP_LINES == 2
+                preset_2x16{}
+            elseif DISP_LINES == 4
+                preset_4x20{}
             reset{}
-            defaults4x20{}
+            defaults{}
             if deviceid{} == core#DEVID_RESP
                 return
     ' if this point is reached, something above failed
@@ -115,89 +119,56 @@ PUB Stop{}
     displayvisibility(OFF)
     i2c.deinit{}
 
-PUB Defaults2x16{}
-' Factory defaults for 2x16 displays
+PUB Defaults{}
+' Factory default settings - initialize shadow registers
+    _fontwidth := core#FONTWIDTH_5
+    _cursor_invert := core#CURSOR_NORMAL
+
+    _disp_lines_n := core#DISP_LINES_2_4
+    _dblht_en := 0
+
+    _disp_en := 0
+    _cursor_en := 0
+    _blink_en := 0
+
+    _char_predef := core#CG_ROM_RAM_240_8
+    _char_set := core#CHAR_ROM_A
+
+    _frequency := %0111
+    _divider := %0000
+
+    _mirror_h := core#SEG0_99
+    _mirror_v := core#COM0_31
+
+    _seg_remap := core#SEG_LR_REMAP_DIS
+    _seg_pincfg := core#ALT_SEGPINCFG
+
+    _ext_vsl := core#VSL_INTERNAL
+    _gpio_state := core#GPIO_OUT_LOW
+
+    _contrast := 127
+
+    _phs1_per := 8
+    _phs2_per := 7
+
+    _vcomh_des_lvl := 2
+
+    _cgram_blink := core#CGRAM_BLINK_DIS
+    _disp_invert := core#NORMAL_DISPLAY
+
+    _fadeblink := 0
+
+PUB Preset_2x16{}
+' Set up for 2x16 displays
     _disp_width := 16
     _disp_height := 2
-    _fontwidth := core#FONTWIDTH_5
-    _cursor_invert := core#CURSOR_NORMAL
     _disp_lines_nw := core#NW_1_2_LINE
 
-    _disp_lines_n := core#DISP_LINES_2_4
-    _dblht_en := 0
-
-    _disp_en := 0
-    _cursor_en := 0
-    _blink_en := 0
-
-    _char_predef := core#CG_ROM_RAM_240_8
-    _char_set := core#CHAR_ROM_A
-
-    _frequency := %0111
-    _divider := %0000
-
-    _mirror_h := core#SEG0_99
-    _mirror_v := core#COM0_31
-
-    _seg_remap := core#SEG_LR_REMAP_DIS
-    _seg_pincfg := core#ALT_SEGPINCFG
-
-    _ext_vsl := core#VSL_INTERNAL
-    _gpio_state := core#GPIO_OUT_LOW
-
-    _contrast := 127
-
-    _phs1_per := 8
-    _phs2_per := 7
-
-    _vcomh_des_lvl := 2
-
-    _cgram_blink := core#CGRAM_BLINK_DIS
-    _disp_invert := core#NORMAL_DISPLAY
-
-    _fadeblink := 0
-
-PUB Defaults4x20{}
-' Factory defaults for 4x20 displays
+PUB Preset_4x20{}
+' Set up for 4x20 displays
     _disp_width := 20
     _disp_height := 4
-    _fontwidth := core#FONTWIDTH_5
-    _cursor_invert := core#CURSOR_NORMAL
     _disp_lines_nw := core#NW_3_4_LINE
-
-    _disp_lines_n := core#DISP_LINES_2_4
-    _dblht_en := 0
-
-    _disp_en := 0
-    _cursor_en := 0
-    _blink_en := 0
-
-    _char_predef := core#CG_ROM_RAM_240_8
-    _char_set := core#CHAR_ROM_A
-
-    _frequency := %0111
-    _divider := %0000
-
-    _mirror_h := core#SEG0_99
-    _mirror_v := core#COM0_31
-
-    _seg_remap := core#SEG_LR_REMAP_DIS
-    _seg_pincfg := core#ALT_SEGPINCFG
-
-    _ext_vsl := core#VSL_INTERNAL
-    _gpio_state := core#GPIO_OUT_LOW
-
-    _contrast := 127
-
-    _phs1_per := 8
-    _phs2_per := 7
-
-    _vcomh_des_lvl := 2
-
-    _cgram_blink := core#CGRAM_BLINK_DIS
-    _disp_invert := core#NORMAL_DISPLAY
-
-    _fadeblink := 0
 
 PUB Busy{}: flag
 ' Flag indicating display is busy
