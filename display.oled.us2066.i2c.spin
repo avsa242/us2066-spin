@@ -67,6 +67,7 @@ VAR
     byte _dblht_mode
     byte _cgram_blink, _disp_invert
     byte _fadeblink
+    byte _disp_width, _disp_height
 
 OBJ
 
@@ -116,6 +117,8 @@ PUB Stop{}
 
 PUB Defaults2x16{}
 ' Factory defaults for 2x16 displays
+    _disp_width := 16
+    _disp_height := 2
     _fontwidth := core#FONTWIDTH_5
     _cursor_invert := core#CURSOR_NORMAL
     _disp_lines_nw := core#NW_1_2_LINE
@@ -156,6 +159,8 @@ PUB Defaults2x16{}
 
 PUB Defaults4x20{}
 ' Factory defaults for 4x20 displays
+    _disp_width := 20
+    _disp_height := 4
     _fontwidth := core#FONTWIDTH_5
     _cursor_invert := core#CURSOR_NORMAL
     _disp_lines_nw := core#NW_3_4_LINE
@@ -344,11 +349,11 @@ PUB Clear{}
 
 PUB ClearLine(line)
 ' Clear specified line
-'   Valid values: 0..3
+'   Valid values: 0..3 (dependent on display's total lines)
 '   Any other value is ignored
-    if lookdown(line: 0..3)
+    if lookdown(line: 0..(_disp_height-1))
         position(0, line)
-        repeat 20
+        repeat _disp_width
             char(" ")
 
 PUB ClockFreq(freq): curr_freq
