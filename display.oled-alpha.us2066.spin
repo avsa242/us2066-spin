@@ -55,7 +55,7 @@ VAR
 
     long _char_attrs
     byte _RESET
-    byte _sa0_addr
+    byte _addr_bits
 ' Variables to hold US2066 register states
     byte _mirror_h, _mirror_v
     byte _char_predef, _char_set
@@ -75,9 +75,9 @@ VAR
 
 OBJ
 
-    i2c     : "com.i2c"
-    core    : "core.con.us2066"
-    time    : "time"
+    i2c     : "com.i2c"                         ' I2C engine
+    core    : "core.con.us2066"                 ' HW-specific constants
+    time    : "time"                            ' time-delay routines
 
 PUB Null{}
 ' This is not a top-level object
@@ -92,25 +92,24 @@ PUB Startx(SCL_PIN, SDA_PIN, RST_PIN, I2C_HZ, ADDR_BIT, DISP_LINES): status
 '  SCL      - I2C Serial Clock pin
 '  SDA      - I2C Serial Data pin
 '  RST_PIN  - OLED display's assigned reset pin
-'  I2C_H    - I2C Bus Frequency (max 400kHz)
+'  I2C_HZ   - I2C Bus Frequency (max 400kHz)
 '  ADDR_BIT - Flag to indicate optional alternative slave address
-    if lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31) and {
-}   and lookdown(DISP_LINES: 2, 4)
+    if (lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31) and {
+}   lookdown(DISP_LINES: 2, 4))
         if (status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ))
             time.usleep(core#T_POR)
             _RESET := RST_PIN
-            case ADDR_BIT
-                    0:
-                        _sa0_addr := 0
-                    other:
-                        _sa0_addr := 1 << 1
-            if DISP_LINES == 2
+            if (ADDR_BIT)
+                _addr_bits := (1 << 1)
+            else
+                _addr_bits := 0
+            if (DISP_LINES == 2)
                 preset_2x16{}
-            elseif DISP_LINES == 4
+            elseif (DISP_LINES == 4)
                 preset_4x20{}
             reset{}
             defaults{}
-            if deviceid{} == core#DEVID_RESP
+            if (deviceid{} == core#DEVID_RESP)
                 return
     ' if this point is reached, something above failed
     ' Double check I/O pin assignments, connections, power
@@ -182,11 +181,11 @@ PUB Busy{}: flag
 '   Returns: TRUE (-1) if busy, FALSE (0) otherwise
     writereg(0, CMDSET_FUND, 0, 0)
     i2c.start{}
-    i2c.write(SLAVE_RD | _sa0_addr)
+    i2c.write(SLAVE_RD | _addr_bits)
     flag := i2c.read(TRUE)
     i2c.stop{}
 
-    return ((flag >> 7) & 1) == 1
+    return (((flag >> 7) & 1) == 1)
 
 PUB Char(ch) | col, row, pos
 ' Display single character.
@@ -298,7 +297,7 @@ PUB ClearLine(line)
 ' Clear specified line
 '   Valid values: 0..3 (dependent on display's total lines)
 '   Any other value is ignored
-    if (line => 0) and (line =< (_disp_ymax))
+    if ((line => 0) and (line =< _disp_ymax))
         position(0, line)
         repeat _disp_width
             char(" ")
@@ -430,7 +429,7 @@ PUB DeviceID{}: id
     writereg(0, CMDSET_FUND, $00, 0)
 
     i2c.start{}
-    i2c.write(SLAVE_RD | _sa0_addr)
+    i2c.write(SLAVE_RD | _addr_bits)
     i2c.read(i2c#ACK)                           ' dummy read
     id := i2c.read(i2c#NAK)                     ' Second read gets the Part ID
     i2c.stop{}
@@ -597,7 +596,7 @@ PUB GetPos{}: addr
 '   Returns: Display address of current cursor position
     writereg(0, CMDSET_FUND, 0, 0)
     i2c.start{}
-    i2c.write(SLAVE_RD | _sa0_addr)
+    i2c.write(SLAVE_RD | _addr_bits)
     addr := i2c.read(TRUE)
     i2c.stop{}
 
@@ -772,7 +771,7 @@ PUB TextDirection(direction): curr_dir
 
 PRI wrdata(databyte) | cmd_pkt
 ' Write bytes with the DATA control byte set
-    cmd_pkt.byte[0] := SLAVE_WR | _sa0_addr
+    cmd_pkt.byte[0] := SLAVE_WR | _addr_bits
     cmd_pkt.byte[1] := core#CTRLBYTE_DATA
     cmd_pkt.byte[2] := databyte
 
@@ -782,7 +781,7 @@ PRI wrdata(databyte) | cmd_pkt
 
 PRI writeReg(nr_bytes, cmd_set, cmd, val) | cmd_pkt[4]
 ' Write cmd with param 'val' from command set
-    cmd_pkt.word[0] := CMD_HDR | _sa0_addr
+    cmd_pkt.word[0] := CMD_HDR | _addr_bits
     case cmd_set
         CMDSET_FUND:
             cmd_pkt.byte[2] := cmd

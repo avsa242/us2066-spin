@@ -73,8 +73,8 @@ VAR
 
 OBJ
 
-    i2c     : "com.i2c"
-    core    : "core.con.us2066"
+    i2c     : "com.i2c"                         ' I2C engine
+    core    : "core.con.us2066"                 ' HW-specific constants
 
 PUB Null()
 ' This is not a top-level object
@@ -84,25 +84,24 @@ PUB Startx(SCL_PIN, SDA_PIN, RST_PIN, I2C_HZ, ADDR_BIT, DISP_LINES): status
 '  SCL      - I2C Serial Clock pin
 '  SDA      - I2C Serial Data pin
 '  RST_PIN  - OLED display's assigned reset pin
-'  I2C_H    - I2C Bus Frequency (max 400kHz)
+'  I2C_HZ   - I2C Bus Frequency (max 400kHz)
 '  ADDR_BIT - Flag to indicate optional alternative slave address
-    if lookdown(SCL_PIN: 0..63) and lookdown(SDA_PIN: 0..63) and {
-}   and lookdown(DISP_LINES: 2, 4)
+    if (lookdown(SCL_PIN: 0..63) and lookdown(SDA_PIN: 0..63) and {
+}   lookdown(DISP_LINES: 2, 4))
         if (status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ))
             waitus(core.T_POR)
             _RESET := RST_PIN
-            case ADDR_BIT
-                    0:
-                        _addr_bits := 0
-                    other:
-                        _addr_bits := 1 << 1
-            if DISP_LINES == 2
+            if (ADDR_BIT)
+                _addr_bits := (1 << 1)
+            else
+                _addr_bits := 0
+            if (DISP_LINES == 2)
                 preset_2x16()
-            elseif DISP_LINES == 4
+            elseif (DISP_LINES == 4)
                 preset_4x20()
             reset()
             defaults()
-            if deviceid() == core.DEVID_RESP
+            if (deviceid() == core.DEVID_RESP)
                 return
     ' if this point is reached, something above failed
     ' Double check I/O pin assignments, connections, power
@@ -178,7 +177,7 @@ PUB Busy(): flag
     flag := i2c.read(TRUE)
     i2c.stop()
 
-    return ((flag >> 7) & 1) == 1
+    return (((flag >> 7) & 1) == 1)
 
 PUB Char(ch) | col, row, pos
 ' Display single character.
@@ -290,7 +289,7 @@ PUB ClearLine(line)
 ' Clear specified line
 '   Valid values: 0..3 (dependent on display's total lines)
 '   Any other value is ignored
-    if (line >= 0) and (line <= (_disp_ymax))
+    if ((line >= 0) and (line <= _disp_ymax))
         position(0, line)
         repeat _disp_width
             char(" ")
