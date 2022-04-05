@@ -54,7 +54,7 @@ CON
 VAR
 
     long _char_attrs
-    byte _reset
+    byte _RESET
     byte _sa0_addr
 ' Variables to hold US2066 register states
     byte _mirror_h, _mirror_v
@@ -78,7 +78,6 @@ OBJ
     i2c     : "com.i2c"
     core    : "core.con.us2066"
     time    : "time"
-    io      : "io"
 
 PUB Null{}
 ' This is not a top-level object
@@ -99,7 +98,7 @@ PUB Startx(SCL_PIN, SDA_PIN, RST_PIN, I2C_HZ, ADDR_BIT, DISP_LINES): status
 }   I2C_HZ =< core#I2C_MAX_FREQ and lookdown(DISP_LINES: 2, 4)
         if (status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ))
             time.usleep(core#T_POR)
-            _reset := RST_PIN
+            _RESET := RST_PIN
             case ADDR_BIT
                     0:
                         _sa0_addr := 0
@@ -716,10 +715,10 @@ PUB Position(column, row) | offset
 
 PUB Reset{}
 ' Send reset signal to display controller
-    io.output(_reset)
-    io.low(_reset)
+    outa[_RESET] := 0
+    dira[_RESET] := 1
     time.usleep(core#TRES)
-    io.high(_reset)
+    outa[_RESET] := 1
     time.msleep(1)
 
 PUB SEGVoltageRef(ref): curr_ref

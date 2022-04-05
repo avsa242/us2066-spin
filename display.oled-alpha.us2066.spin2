@@ -52,7 +52,7 @@ CON
 VAR
 
     long _char_attrs
-    byte _reset
+    byte _RESET
     byte _sa0_addr
 ' Variables to hold US2066 register states
     byte _mirror_h, _mirror_v
@@ -90,7 +90,7 @@ PUB Startx(SCL_PIN, SDA_PIN, RST_PIN, I2C_HZ, ADDR_BIT, DISP_LINES): status
 }   I2C_HZ <= core.I2C_MAX_FREQ and lookdown(DISP_LINES: 2, 4)
         if (status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ))
             waitus(core.T_POR)
-            _reset := RST_PIN
+            _RESET := RST_PIN
             case ADDR_BIT
                     0:
                         _sa0_addr := 0
@@ -707,9 +707,9 @@ PUB Position(column, row) | offset
 
 PUB Reset()
 ' Send reset signal to display controller
-    pinl(_reset)
+    pinl(_RESET)
     waitus(core.TRES)
-    pinh(_reset)
+    pinh(_RESET)
     waitms(1)
 
 PUB SEGVoltageRef(ref): curr_ref
