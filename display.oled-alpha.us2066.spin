@@ -59,9 +59,9 @@ VAR
 ' Variables to hold US2066 register states
     byte _mirror_h, _mirror_v
     byte _char_predef, _char_set
-    byte _fontwidth, _cursor_invert, _disp_lines_nw
-    byte _frequency, _divider
-    byte _disp_en, _cursor_en, _blink_en
+    byte _fnt_wid, _curs_invert, _disp_lines_nw
+    byte _freq, _clkdiv
+    byte _disp_en, _curs_en, _blink_en
     byte _disp_lines_n, _dblht_en
     byte _seg_remap, _seg_pincfg
     byte _ext_vsl, _gpio_state
@@ -123,21 +123,21 @@ PUB Stop{}
 
 PUB Defaults{}
 ' Factory default settings - initialize shadow registers
-    _fontwidth := core#FONTWIDTH_5
-    _cursor_invert := core#CURSOR_NORMAL
+    _fnt_wid := core#FONTWIDTH_5
+    _curs_invert := core#CURSOR_NORMAL
 
     _disp_lines_n := core#DISP_LINES_2_4
     _dblht_en := 0
 
     _disp_en := 0
-    _cursor_en := 0
+    _curs_en := 0
     _blink_en := 0
 
     _char_predef := core#CG_ROM_RAM_240_8
     _char_set := core#CHAR_ROM_A
 
-    _frequency := %0111
-    _divider := %0000
+    _freq := %0111
+    _clkdiv := %0000
 
     _mirror_h := core#SEG0_99
     _mirror_v := core#COM0_31
@@ -299,27 +299,27 @@ PUB ClockFreq(freq): curr_freq
     case freq
         54, 460, 467, 474, 481, 488, 494, 501,{
 }       508, 515, 522, 528, 535, 542, 549, 556:
-            _frequency := lookdown(freq: 54, 460, 467, 474, 481, 488, 494, 501,{
+            _freq := lookdown(freq: 54, 460, 467, 474, 481, 488, 494, 501,{
 }            508, 515, 522, 528, 535, 542, 549, 556) << 4
         other:
-            curr_freq := _frequency >> 4
+            curr_freq := _freq >> 4
             return lookupz(curr_freq: 54, 460, 467, 474, 481, 488, 494, 501,{
 }           508, 515, 522, 528, 535, 542, 549, 556)
 
     writereg(1, CMDSET_OLED, core#DISP_CLKDIV_OSC,{
-}   _frequency | _divider)
+}   _freq | _clkdiv)
 
 PUB ClockDiv(divider): curr_div
 ' Set clock frequency divider used by the display controller
 '   Valid values: 1..16 (default: 1)
     case divider
         1..16:
-            _divider--
+            _clkdiv--
         other:
-            return _divider + 1
+            return _clkdiv + 1
 
     writereg(1, CMDSET_OLED, core#DISP_CLKDIV_OSC,{
-}   _frequency | _divider)
+}   _freq | _clkdiv)
 
 PUB COMLogicHighLevel(level): curr_lvl
 ' Set COMmon pins high logic level, relative to Vcc
@@ -364,7 +364,7 @@ PUB CursorBlink(state): curr_state
             return _blink_en
 
     writereg(0, CMDSET_FUND, core#DISPLAY_ONOFF | _disp_en |{
-}   _cursor_en | _blink_en, 0)
+}   _curs_en | _blink_en, 0)
 
 PUB CursorInvert(state): curr_state
 ' Invert cursor
@@ -374,12 +374,12 @@ PUB CursorInvert(state): curr_state
 '   Any other value returns the current setting
     case ||(state)
         0, 1:
-            _cursor_invert := ((state & 1) << 1)
+            _curs_invert := ((state & 1) << 1)
         other:
-            return _cursor_invert
+            return _curs_invert
 
     writereg(1, CMDSET_EXTD, core#EXTENDED_FUNCSET |{
-}   _fontwidth | _cursor_invert | _disp_lines_nw, 0)
+}   _fnt_wid | _curs_invert | _disp_lines_nw, 0)
 
 PUB CursorMode(type)
 ' Select cursor display mode
@@ -390,25 +390,25 @@ PUB CursorMode(type)
 '       3: Underscore, block blinking
     case type
         0:
-            _cursor_invert := _blink_en := _cursor_en := FALSE
+            _curs_invert := _blink_en := _curs_en := FALSE
         1:
-            _cursor_en := core#CURSOR_OFF
-            _cursor_invert := core#CURSOR_INVERT
+            _curs_en := core#CURSOR_OFF
+            _curs_invert := core#CURSOR_INVERT
             _blink_en := core#BLINK_ON
         2:
-            _cursor_en := core#CURSOR_ON
-            _cursor_invert := core#CURSOR_NORMAL
+            _curs_en := core#CURSOR_ON
+            _curs_invert := core#CURSOR_NORMAL
             _blink_en := core#BLINK_OFF
         3:
-            _cursor_en := core#CURSOR_ON
-            _cursor_invert := core#CURSOR_NORMAL
+            _curs_en := core#CURSOR_ON
+            _curs_invert := core#CURSOR_NORMAL
             _blink_en := core#BLINK_ON
         other:
             return
 
     writereg(0, CMDSET_FUND, core#DISPLAY_ONOFF | _disp_en |{
-}   _cursor_en | _blink_en, 0)
-    cursorinvert(_cursor_invert >> 1)
+}   _curs_en | _blink_en, 0)
+    cursorinvert(_curs_invert >> 1)
 
 PUB DeviceID{}: id
 ' Read device ID
@@ -490,7 +490,7 @@ PUB DisplayLines(lines)
     writereg(1, CMDSET_FUND, core#FUNCTION_SET_0 | {
 }   _disp_lines_n | _dblht_en, 0)
     writereg(1, CMDSET_EXTD, core#EXTENDED_FUNCSET | {
-}   _fontwidth | _cursor_invert | _disp_lines_nw, 0)
+}   _fnt_wid | _curs_invert | _disp_lines_nw, 0)
 
 PUB DisplayReady{}: flag
 ' Flag indicating display is ready
@@ -570,7 +570,7 @@ PUB DisplayVisibility(mode): curr_mode
             return ((_disp_en >> 2) & 1 ) | ((_disp_invert & 1) << 1)
 
     writereg(1, CMDSET_FUND, core#DISPLAY_ONOFF | _disp_en |{
-}   _cursor_en | _blink_en, 0)
+}   _curs_en | _blink_en, 0)
     writereg(1, CMDSET_EXTD, core#FUNCTION_SET_1 |{
 }   _cgram_blink | _disp_invert, 0)
 
@@ -580,14 +580,14 @@ PUB FontWidth(sz): curr_sz
 '   Any other value returns the current setting
     case sz
         5:
-            _fontwidth := core#FONTWIDTH_5
+            _fnt_wid := core#FONTWIDTH_5
         6:
-            _fontwidth := core#FONTWIDTH_6
+            _fnt_wid := core#FONTWIDTH_6
         other:
-            return _fontwidth
+            return _fnt_wid
 
     writereg(1, CMDSET_EXTD, core#EXTENDED_FUNCSET |{
-}   _fontwidth | _cursor_invert | _disp_lines_nw, 0)
+}   _fnt_wid | _curs_invert | _disp_lines_nw, 0)
 
 PUB GetPos{}: addr
 ' Get current position in DDRAM
