@@ -48,8 +48,12 @@ CON
 ' Flag top-level objects can use to tell this is the PASM version
     PASM            = TRUE
 
+' Character attributes
+    CHAR_PROC       = (1 << 1)
+
 VAR
 
+    long _char_attrs
     byte _reset
     byte _sa0_addr
 ' Variables to hold US2066 register states
@@ -189,55 +193,61 @@ PUB Char(ch) | col, row, pos
 ' Display single character.
 '   NOTE: Control codes are interpreted.
 '       To display the glyph for these characters, use char_literal(), instead
-    case ch
-        7:
-            { bell; flash display }
-            displayvisibility(INVERT)
-            time.msleep(50)
-            displayvisibility(NORMAL)
-        BS, $7F:
-            { backspace }
-            pos := getpos{}                     ' get current display pointer
-            row := (pos / $20)                  '   extract row from it
-            col := pos - (row * $20)            '   extract column from it
-            if (col > 0)                        ' not left-most column?
-                position(col-1, row)            '   then back up one
-                wrdata(" ")                     '   erase it with a space
-                position(col-1, row)            '   move back again
-            else                                ' otherwise, see if the cursor
-                if (row > 0)                    '   can move back a row
-                    position(_disp_xmax, row-1) '   but limit to (0, 0)
-                    wrdata(" ")
-                    position(_disp_xmax, row-1)
-        LF:
-            { line-feed }
-            pos := getpos{}
-            row := (pos / $20)
-            col := pos - (row * $20)
-            if (col > 0)                        ' not already on the first col?
-                col--                           '   move to col below prev char
-            if (row < _disp_ymax)               ' not already on the last row?
-                position(col, row+1)            '   go to same col, next row
-            else                                ' otherwise, go to same col,
-                position(col, 0)                '   first row
-        CB:
-            { clear display }
-            clear{}
-        CR:
-            { carriage-return }
-            pos := getpos{}
-            row := (pos / $20)
-            col := pos - (row * $20)
-            position(0, row)
-        other:
-            { displayable character }
-            wrdata(ch)
+    if (_char_attrs & CHAR_PROC)
+        case ch
+            7:
+                { bell; flash display }
+                displayvisibility(INVERT)
+                time.msleep(50)
+                displayvisibility(NORMAL)
+                return
+            BS, $7F:
+                { backspace }
+                pos := getpos{}                     ' get current display pointer
+                row := (pos / $20)                  '   extract row from it
+                col := pos - (row * $20)            '   extract column from it
+                if (col > 0)                        ' not left-most column?
+                    position(col-1, row)            '   then back up one
+                    wrdata(" ")                     '   erase it with a space
+                    position(col-1, row)            '   move back again
+                else                                ' otherwise, see if the cursor
+                    if (row > 0)                    '   can move back a row
+                        position(_disp_xmax, row-1) '   but limit to (0, 0)
+                        wrdata(" ")
+                        position(_disp_xmax, row-1)
+                return
+            LF:
+                { line-feed }
+                pos := getpos{}
+                row := (pos / $20)
+                col := pos - (row * $20)
+                if (col > 0)                        ' not already on the first col?
+                    col--                           '   move to col below prev char
+                if (row < _disp_ymax)               ' not already on the last row?
+                    position(col, row+1)            '   go to same col, next row
+                else                                ' otherwise, go to same col,
+                    position(col, 0)                '   first row
+                return
+            CB:
+                { clear display }
+                clear{}
+                return
+            CR:
+                { carriage-return }
+                pos := getpos{}
+                row := (pos / $20)
+                col := pos - (row * $20)
+                position(0, row)
+                return
 
-PUB Char_Literal(ch)
-' Display single character
-'   NOTE: Control codes will not be processed, but the font glyph will be
-'   display instead
-    wrdata(ch & $FF)
+    { displayable character }
+    wrdata(ch)
+
+PUB CharAttrs(attr)
+' Set character attributes
+'   Valid values:
+'       CHAR_PROC (2) - process control codes (0 to print literal char)
+    _char_attrs := attr
 
 PUB CharGen(count)
 ' Select number of pre-defined vs free user-defined character cells
@@ -728,25 +738,6 @@ PUB SEGVoltageRef(ref): curr_ref
 
     writereg(1, CMDSET_OLED, core#FUNCTION_SEL_C, _ext_vsl |{
 }   _gpio_state)
-
-PUB StrDelay(stringptr, delay)
-' Display zero-terminated string with inter-character delay, in ms
-    repeat strsize(stringptr)
-        char(byte[stringptr++])
-        time.msleep(delay)
-
-PUB StrDelay_Literal(stringptr, delay)
-' Display zero-terminated string with inter-character delay, in ms
-'   NOTE: Control characters will not be processed, but will be displayed
-    repeat strsize(stringptr)
-        char_literal(byte[stringptr++])
-        time.msleep(delay)
-
-PUB Str_Literal(stringptr)
-' Display zero-terminated string
-'   NOTE: Control characters will not be processed, but will be displayed
-    repeat strsize(stringptr)
-        char_literal(byte[stringptr++])
 
 PUB SupplyVoltage(v)
 ' Set supply voltage (enable/disable internal regulator)

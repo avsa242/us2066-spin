@@ -3,9 +3,9 @@
     Filename: OLED-US2066-Demo.spin
     Description: Demo of the US2066 driver
     Author: Jesse Burt
-    Copyright (c) 2021
+    Copyright (c) 2022
     Created Dec 30, 2017
-    Updated Jan 2, 2021
+    Updated Apr 5, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -44,6 +44,7 @@ OBJ
 PUB Main{}
 
     setup{}
+    oled.charattrs(oled#CHAR_PROC)              ' process/interpret ctrl chars
 
     greet_demo{}
     time.sleep(DEMO_DELAY)
@@ -146,25 +147,25 @@ PUB Cursor_demo{} | delay, dbl_mode
                 oled.doubleheight(dbl_mode)
                 oled.cursormode(0)
                 oled.position(0, 0)
-                oled.strdelay(string("No cursor  (0)"), delay)
+                strdelay(string("No cursor  (0)"), delay)
                 time.sleep(2)
                 oled.clearline(0)
 
                 oled.cursormode(1)
                 oled.position(0, 0)
-                oled.strdelay(string("Block/blink(1)"), delay)
+                strdelay(string("Block/blink(1)"), delay)
                 time.sleep(2)
                 oled.clearline(0)
 
                 oled.cursormode(2)
                 oled.position(0, 0)
-                oled.strdelay(string("Underscore (2)"), delay)
+                strdelay(string("Underscore (2)"), delay)
                 time.sleep(2)
                 oled.clearline(0)
 
                 oled.cursormode(3)
                 oled.position(0, 0)
-                oled.strdelay(string("Under./blink(3)"), delay)
+                strdelay(string("Under./blink(3)"), delay)
                 time.sleep(2)
         4:
             repeat dbl_mode from 0 to 2 step 2
@@ -172,28 +173,28 @@ PUB Cursor_demo{} | delay, dbl_mode
                 oled.doubleheight(dbl_mode)
                 oled.cursormode(0)
                 oled.position(0, 0)
-                oled.strdelay(string("Cursor:"), delay)
+                strdelay(string("Cursor:"), delay)
 
                 oled.position(0, 1)
-                oled.strdelay(string("None           (0)"), delay)
+                strdelay(string("None           (0)"), delay)
                 time.sleep(2)
                 oled.clearline(1)
 
                 oled.cursormode(1)
                 oled.position(0, 1)
-                oled.strdelay(string("Block/blink    (1)"), delay)
+                strdelay(string("Block/blink    (1)"), delay)
                 time.sleep(2)
                 oled.clearline(1)
 
                 oled.cursormode(2)
                 oled.position(0, 1)
-                oled.strdelay(string("Underscore     (2)"), delay)
+                strdelay(string("Underscore     (2)"), delay)
                 time.sleep(2)
                 oled.clearline(1)
 
                 oled.cursormode(3)
                 oled.position(0, 1)
-                oled.strdelay(string("Underscore/blink(3)"), delay)
+                strdelay(string("Underscore/blink(3)"), delay)
                 time.sleep(2)
 
     oled.doubleheight(0)
@@ -340,6 +341,12 @@ PUB Position_Demo{} | x, y
             oled.char(" ")
             oled.char("-")
             time.msleep(25)
+
+PRI StrDelay(stringptr, delay)
+' Display zero-terminated string with inter-character delay, in ms
+    repeat strsize(stringptr)
+        oled.char(byte[stringptr++])
+        time.msleep(delay)
 
 PUB Setup{}
 
