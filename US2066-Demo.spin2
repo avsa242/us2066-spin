@@ -372,7 +372,7 @@ PUB Setup()
     oled.mirrorv(FALSE)
     oled.clear()
     oled.position(0, 0)
-    oled.displayvisibility(oled.NORMAL)
+    oled.displayvisibility(oled.NORM)
     waitms(100)
 
 DAT

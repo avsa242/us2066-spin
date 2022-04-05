@@ -37,13 +37,13 @@ CON
 
 ' Display visibility modes
     OFF             = 0
-    NORMAL          = 1
+    NORM            = 1
     ON              = 1
     INVERT          = 2
 
 ' SEG Voltage reference/enable or disable internal regulator
-    INTERNAL        = 0
-    EXTERNAL        = 1
+    INT             = 0
+    EXT             = 1
 
 ' Flag top-level objects can use to tell this is the PASM version
     PASM            = TRUE
@@ -123,8 +123,8 @@ PUB Stop{}
 
 PUB Defaults{}
 ' Factory default settings - initialize shadow registers
-    _fnt_wid := core#FONTWIDTH_5
-    _curs_invert := core#CURSOR_NORMAL
+    _fnt_wid := core#FNTWIDTH_5
+    _curs_invert := core#CURS_NORM
 
     _disp_lines_n := core#DISP_LINES_2_4
     _dblht_en := 0
@@ -145,7 +145,7 @@ PUB Defaults{}
     _seg_remap := core#SEG_LR_REMAP_DIS
     _seg_pincfg := core#ALT_SEGPINCFG
 
-    _ext_vsl := core#VSL_INTERNAL
+    _ext_vsl := core#VSL_INT
     _gpio_state := core#GPIO_OUT_LOW
 
     _contrast := 127
@@ -156,7 +156,7 @@ PUB Defaults{}
     _vcomh_des_lvl := 2
 
     _cgram_blink := core#CGRAM_BLINK_DIS
-    _disp_invert := core#NORMAL_DISPLAY
+    _disp_invert := core#NORM_DISP
 
     _fadeblink := 0
 
@@ -186,7 +186,7 @@ PUB Char(ch) | col, row, pos
                 { bell; flash display }
                 displayvisibility(INVERT)
                 time.msleep(50)
-                displayvisibility(NORMAL)
+                displayvisibility(NORM)
                 return
             BS, $7F:
                 { backspace }
@@ -255,7 +255,7 @@ PUB CharGen(count)
         other:
             return
 
-    writereg(2, CMDSET_EXTD, core#FUNCTION_SEL_B,{
+    writereg(2, CMDSET_EXTD, core#FUNCT_SEL_B,{
 }   _char_predef | _char_set)
 
 PUB CharROM(char_set)
@@ -275,12 +275,12 @@ PUB CharROM(char_set)
         other:
             return _char_set
 
-    writereg(2, CMDSET_EXTD, core#FUNCTION_SEL_B,{
+    writereg(2, CMDSET_EXTD, core#FUNCT_SEL_B,{
 }   _char_predef | _char_set)
 
 PUB Clear{}
 ' Clear display
-    writereg(0, CMDSET_FUND, core#CLEAR_DISPLAY, 0)
+    writereg(0, CMDSET_FUND, core#CLEAR_DISP, 0)
 
 PUB ClearLine(line)
 ' Clear specified line
@@ -363,7 +363,7 @@ PUB CursorBlink(state): curr_state
         other:
             return _blink_en
 
-    writereg(0, CMDSET_FUND, core#DISPLAY_ONOFF | _disp_en |{
+    writereg(0, CMDSET_FUND, core#DISP_ONOFF | _disp_en |{
 }   _curs_en | _blink_en, 0)
 
 PUB CursorInvert(state): curr_state
@@ -378,7 +378,7 @@ PUB CursorInvert(state): curr_state
         other:
             return _curs_invert
 
-    writereg(1, CMDSET_EXTD, core#EXTENDED_FUNCSET |{
+    writereg(1, CMDSET_EXTD, core#EXTD_FUNCSET |{
 }   _fnt_wid | _curs_invert | _disp_lines_nw, 0)
 
 PUB CursorMode(type)
@@ -392,21 +392,21 @@ PUB CursorMode(type)
         0:
             _curs_invert := _blink_en := _curs_en := FALSE
         1:
-            _curs_en := core#CURSOR_OFF
-            _curs_invert := core#CURSOR_INVERT
+            _curs_en := core#CURS_OFF
+            _curs_invert := core#CURS_INVERT
             _blink_en := core#BLINK_ON
         2:
-            _curs_en := core#CURSOR_ON
-            _curs_invert := core#CURSOR_NORMAL
+            _curs_en := core#CURS_ON
+            _curs_invert := core#CURS_NORM
             _blink_en := core#BLINK_OFF
         3:
-            _curs_en := core#CURSOR_ON
-            _curs_invert := core#CURSOR_NORMAL
+            _curs_en := core#CURS_ON
+            _curs_invert := core#CURS_NORM
             _blink_en := core#BLINK_ON
         other:
             return
 
-    writereg(0, CMDSET_FUND, core#DISPLAY_ONOFF | _disp_en |{
+    writereg(0, CMDSET_FUND, core#DISP_ONOFF | _disp_en |{
 }   _curs_en | _blink_en, 0)
     cursorinvert(_curs_invert >> 1)
 
@@ -435,7 +435,7 @@ PUB DisplayBlink(delay): curr_dly
         other:
             return _fadeblink
 
-    writereg(1, CMDSET_OLED, core#FADEOUT_BLINK, _fadeblink)
+    writereg(1, CMDSET_OLED, core#FADE_BLINK, _fadeblink)
 
 PUB DisplayFade(delay): curr_dly
 ' Set time interval for display fade out, in number of frames
@@ -452,7 +452,7 @@ PUB DisplayFade(delay): curr_dly
         other:
             return _fadeblink
 
-    writereg(1, CMDSET_OLED, core#FADEOUT_BLINK, _fadeblink)
+    writereg(1, CMDSET_OLED, core#FADE_BLINK, _fadeblink)
 
 PUB DisplayInverted(enabled)
 ' Invert display colors
@@ -460,7 +460,7 @@ PUB DisplayInverted(enabled)
 '       TRUE (-1 or 1), FALSE (0)
     case ||(enabled)
         0, 1:
-            enabled := lookupz(||(enabled): NORMAL, INVERT)
+            enabled := lookupz(||(enabled): NORM, INVERT)
             displayvisibility(enabled)
         other:
             return
@@ -487,9 +487,9 @@ PUB DisplayLines(lines)
         other:
             return
 
-    writereg(1, CMDSET_FUND, core#FUNCTION_SET_0 | {
+    writereg(1, CMDSET_FUND, core#FUNCT_SET_0 | {
 }   _disp_lines_n | _dblht_en, 0)
-    writereg(1, CMDSET_EXTD, core#EXTENDED_FUNCSET | {
+    writereg(1, CMDSET_EXTD, core#EXTD_FUNCSET | {
 }   _fnt_wid | _curs_invert | _disp_lines_nw, 0)
 
 PUB DisplayReady{}: flag
@@ -530,8 +530,8 @@ PUB DoubleHeight(mode): curr_mode
         0:
             _dblht_mode := 0
             _dblht_en := 0
-            writereg(1, CMDSET_EXTD, core#FUNCTION_SET_0 | {
-}           core#DISP_LINES_2_4 | core#DBLHT_FONT_DIS, 0)
+            writereg(1, CMDSET_EXTD, core#FUNCT_SET_0 | {
+}           core#DISP_LINES_2_4 | core#DBLHT_FNT_DIS, 0)
             return
         1:
             _dblht_mode := core#DBLHT_BOTTOM
@@ -544,7 +544,7 @@ PUB DoubleHeight(mode): curr_mode
         other:
             return _dblht_mode
 
-    _dblht_en := core#DBLHT_FONT_EN
+    _dblht_en := core#DBLHT_FNT_EN
 
     writereg(1, CMDSET_EXTD, core#DBLHT | _dblht_mode, 0)
 
@@ -552,7 +552,7 @@ PUB DisplayVisibility(mode): curr_mode
 ' Set display visibility
 '   Valid values:
 '       OFF (0): Display off
-'       NORMAL (1): Normal display
+'       NORM (1): Normal display
 '       INVERT (2): Inverted display
 '   Any other value returns the current setting
 '   NOTE: Takes effect immediately. Does not affect display RAM contents
@@ -560,18 +560,18 @@ PUB DisplayVisibility(mode): curr_mode
     case mode
         OFF:
             _disp_en := 0
-        NORMAL:
+        NORM:
             _disp_en := core#DISP_ON
-            _disp_invert := core#NORMAL_DISPLAY
+            _disp_invert := core#NORM_DISP
         INVERT:
             _disp_en := core#DISP_ON
-            _disp_invert := core#REVERSE_DISPLAY
+            _disp_invert := core#REV_DISP
         other:
             return ((_disp_en >> 2) & 1 ) | ((_disp_invert & 1) << 1)
 
-    writereg(1, CMDSET_FUND, core#DISPLAY_ONOFF | _disp_en |{
+    writereg(1, CMDSET_FUND, core#DISP_ONOFF | _disp_en |{
 }   _curs_en | _blink_en, 0)
-    writereg(1, CMDSET_EXTD, core#FUNCTION_SET_1 |{
+    writereg(1, CMDSET_EXTD, core#FUNCT_SET_1 |{
 }   _cgram_blink | _disp_invert, 0)
 
 PUB FontWidth(sz): curr_sz
@@ -580,13 +580,13 @@ PUB FontWidth(sz): curr_sz
 '   Any other value returns the current setting
     case sz
         5:
-            _fnt_wid := core#FONTWIDTH_5
+            _fnt_wid := core#FNTWIDTH_5
         6:
-            _fnt_wid := core#FONTWIDTH_6
+            _fnt_wid := core#FNTWIDTH_6
         other:
             return _fnt_wid
 
-    writereg(1, CMDSET_EXTD, core#EXTENDED_FUNCSET |{
+    writereg(1, CMDSET_EXTD, core#EXTD_FUNCSET |{
 }   _fnt_wid | _curs_invert | _disp_lines_nw, 0)
 
 PUB GetPos{}: addr
@@ -617,13 +617,13 @@ PUB GPIOState(state): curr_state
         other:
             return _gpio_state
 
-    writereg(1, CMDSET_OLED, core#FUNCTION_SEL_C, _ext_vsl |{
+    writereg(1, CMDSET_OLED, core#FUNCT_SEL_C, _ext_vsl |{
 }   _gpio_state)
 
 PUB Home{}
 ' Returns cursor to home position (0, 0)
 '   NOTE: Doesn't clear the display
-    writereg(0, CMDSET_FUND, core#HOME_DISPLAY, 0)
+    writereg(0, CMDSET_FUND, core#HOME_DISP, 0)
 
 PUB MirrorH(state): curr_state
 ' Mirror display, horizontally
@@ -721,18 +721,18 @@ PUB Reset{}
 PUB SEGVoltageRef(ref): curr_ref
 ' Select segment voltage reference
 '   Valid values:
-'      *INTERNAL (0): Internal VSL
-'       EXTERNAL (1): External VSL
+'      *INT (0): Internal VSL
+'       EXT (1): External VSL
 '   Any other value returns the current setting
     case ref
-        INTERNAL:
-            _ext_vsl := core#VSL_INTERNAL
-        EXTERNAL:
-            _ext_vsl := core#VSL_EXTERNAL
+        INT:
+            _ext_vsl := core#VSL_INT
+        EXT:
+            _ext_vsl := core#VSL_EXT
         other:
             return _ext_vsl
 
-    writereg(1, CMDSET_OLED, core#FUNCTION_SEL_C, _ext_vsl |{
+    writereg(1, CMDSET_OLED, core#FUNCT_SEL_C, _ext_vsl |{
 }   _gpio_state)
 
 PUB SupplyVoltage(v)
@@ -744,11 +744,11 @@ PUB SupplyVoltage(v)
     case v
         3, 3_3:
         5:
-            v := core#INT_REG_ENABLE
+            v := core#INT_REG_EN
         other:
             return
 
-    writereg(2, CMDSET_EXTD, core#FUNCTION_SEL_A, V)
+    writereg(2, CMDSET_EXTD, core#FUNCT_SEL_A, V)
 
 PUB TextDirection(direction): curr_dir
 ' Change mapping between display data column address and segment driver.
@@ -787,45 +787,45 @@ PRI writeReg(nr_bytes, cmd_set, cmd, val) | cmd_pkt[4]
         CMDSET_EXTD:
             case nr_bytes
                 1:
-                    cmd_pkt.byte[2] := core#CMDSET_EXTENDED | _disp_lines_n | _dblht_en
+                    cmd_pkt.byte[2] := core#CMDSET_EXTD | _disp_lines_n | _dblht_en
                     cmd_pkt.byte[3] := core#CTRLBYTE_CMD
                     cmd_pkt.byte[4] := cmd
                     cmd_pkt.byte[5] := core#CTRLBYTE_CMD
-                    cmd_pkt.byte[6] := core#CMDSET_FUNDAMENTAL | _disp_lines_n | _dblht_en
+                    cmd_pkt.byte[6] := core#CMDSET_FUND | _disp_lines_n | _dblht_en
                     nr_bytes := 7
                 2:
-                    cmd_pkt.byte[2] := core#CMDSET_EXTENDED | _disp_lines_n | _dblht_en
+                    cmd_pkt.byte[2] := core#CMDSET_EXTD | _disp_lines_n | _dblht_en
                     cmd_pkt.byte[3] := core#CTRLBYTE_CMD
                     cmd_pkt.byte[4] := cmd
                     cmd_pkt.byte[5] := core#CTRLBYTE_DATA
                     cmd_pkt.byte[6] := val
                     cmd_pkt.byte[7] := core#CTRLBYTE_CMD
-                    cmd_pkt.byte[8] := core#CMDSET_FUNDAMENTAL | _disp_lines_n | _dblht_en
+                    cmd_pkt.byte[8] := core#CMDSET_FUND | _disp_lines_n | _dblht_en
                     nr_bytes := 9
                 other:
                     return
         CMDSET_EXTD_IS:
             case nr_bytes
                 1:
-                    cmd_pkt.byte[2] := core#CMDSET_EXTENDED | _disp_lines_n | _dblht_en | 1
+                    cmd_pkt.byte[2] := core#CMDSET_EXTD | _disp_lines_n | _dblht_en | 1
                     cmd_pkt.byte[3] := core#CTRLBYTE_CMD
                     cmd_pkt.byte[4] := cmd
                     cmd_pkt.byte[5] := core#CTRLBYTE_CMD
-                    cmd_pkt.byte[6] := core#CMDSET_FUNDAMENTAL | _disp_lines_n | _dblht_en
+                    cmd_pkt.byte[6] := core#CMDSET_FUND | _disp_lines_n | _dblht_en
                     nr_bytes := 7
                 2:
-                    cmd_pkt.byte[2] := core#CMDSET_EXTENDED | _disp_lines_n | _dblht_en
+                    cmd_pkt.byte[2] := core#CMDSET_EXTD | _disp_lines_n | _dblht_en
                     cmd_pkt.byte[3] := core#CTRLBYTE_CMD
                     cmd_pkt.byte[4] := cmd
                     cmd_pkt.byte[5] := core#CTRLBYTE_DATA
                     cmd_pkt.byte[6] := val
                     cmd_pkt.byte[7] := core#CTRLBYTE_CMD
-                    cmd_pkt.byte[8] := core#CMDSET_FUNDAMENTAL | _disp_lines_n | _dblht_en
+                    cmd_pkt.byte[8] := core#CMDSET_FUND | _disp_lines_n | _dblht_en
                     nr_bytes := 9
                 other:
                     return
         CMDSET_OLED:
-            cmd_pkt.byte[2] := core#CMDSET_EXTENDED | _disp_lines_n | _dblht_en
+            cmd_pkt.byte[2] := core#CMDSET_EXTD | _disp_lines_n | _dblht_en
             cmd_pkt.byte[3] := core#CTRLBYTE_CMD
             cmd_pkt.byte[4] := core#OLED_CMDSET_ENA
             cmd_pkt.byte[5] := core#CTRLBYTE_CMD
@@ -835,7 +835,7 @@ PRI writeReg(nr_bytes, cmd_set, cmd, val) | cmd_pkt[4]
             cmd_pkt.byte[9] := core#CTRLBYTE_CMD
             cmd_pkt.byte[10] := core#OLED_CMDSET_DIS
             cmd_pkt.byte[11] := core#CTRLBYTE_CMD
-            cmd_pkt.byte[12] := core#CMDSET_FUNDAMENTAL | _disp_lines_n | _dblht_en
+            cmd_pkt.byte[12] := core#CMDSET_FUND | _disp_lines_n | _dblht_en
             nr_bytes := 13
 
     i2c.start{}
