@@ -739,16 +739,17 @@ PUB SupplyVoltage(v)
 ' Set supply voltage (enable/disable internal regulator)
 '   Valid values:
 '      *5: Enable internal regulator (use for 5V operation)
-'       3, 3_3: Disable internal regulator (3.3V/low-voltage operation)
+'       3: Disable internal regulator (3.3V/low-voltage operation)
 '   Any other value is ignored
     case v
-        3, 3_3:
+        3:
+            v := core#INT_REG_DIS
         5:
             v := core#INT_REG_EN
         other:
             return
 
-    writereg(2, CMDSET_EXTD, core#FUNCT_SEL_A, V)
+    writereg(2, CMDSET_EXTD, core#FUNCT_SEL_A, v)
 
 PUB TextDirection(direction): curr_dir
 ' Change mapping between display data column address and segment driver.
