@@ -19,15 +19,18 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for US2066-base
 
 P1/SPIN1:
 * spin-standard-library
-* P1/SPIN1: 1 extra core/cog for the PASM I2C driver
+* P1/SPIN1: 1 extra core/cog for the PASM I2C engine
 
 P2/SPIN2:
 * p2-spin-standard-library
 
 ## Compiler Compatibility
 
-* P1/SPIN1: OpenSpin (tested with 1.00.81), FlexSpin (tested with 5.0.0)
-* P2/SPIN2: FlexSpin (tested with 5.0.0)
+* P1/SPIN1 FlexSpin (bytecode): OK, tested with 5.9.10-beta
+* P1/SPIN1 FlexSpin (native): OK, tested with 5.9.10-beta
+* P2/SPIN2 FlexSpin (nu-code): Untested
+* P2/SPIN2 FlexSpin (native): OK, tested with 5.9.10-beta
+* P1/SPIN1 OpenSpin (bytecode): Untested (deprecated)
 * ~~BST~~ (incompatible - no preprocessor)
 * ~~Propeller Tool~~ (incompatible - no preprocessor)
 * ~~PNut~~ (incompatible - no preprocessor)
@@ -37,10 +40,4 @@ P2/SPIN2:
 * No scrolling support (chipset has horizontal scrolling support)
 * No support for custom characters
 * No support for parallel interface (not planned)
-
-## TODO
-
-- [ ] Customer character sets
-- [ ] Scrolling support
-- [ ] SPI variant
 
