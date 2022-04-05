@@ -430,7 +430,7 @@ PUB DisplayBlink(delay): curr_dly
     case delay
         0:
             _fadeblink := core#FADE_BLINK_DIS
-        8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128:
+        8..128:
             _fadeblink := (core#BLINK_ENA | ((delay / 8) - 1))
         other:
             return _fadeblink
@@ -447,7 +447,7 @@ PUB DisplayFade(delay): curr_dly
     case delay
         0:
             _fadeblink := core#FADE_BLINK_DIS
-        8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128:
+        8..128:
             _fadeblink := (core#FADE_OUT_ENA | ((delay / 8) - 1))
         other:
             return _fadeblink
