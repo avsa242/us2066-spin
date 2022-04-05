@@ -4,9 +4,9 @@
     Author: Jesse Burt
     Description: I2C driver for US2066-based OLED
         alphanumeric displays (P2 version)
-    Copyright (c) 2021
+    Copyright (c) 2022
     Created Dec 30, 2017
-    Updated Aug 14, 2021
+    Updated Apr 5, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -18,8 +18,6 @@ CON
     SLAVE_RD        = SLAVE_WR|1
     R               = 1
 
-    DEF_SCL         = 28
-    DEF_SDA         = 29
     DEF_HZ          = 100_000
     I2C_MAX_FREQ    = core.I2C_MAX_FREQ
 
@@ -67,7 +65,7 @@ VAR
     byte _dblht_mode
     byte _cgram_blink, _disp_invert
     byte _fadeblink
-    byte _disp_width, _disp_height
+    byte _disp_width, _disp_height, _disp_xmax, _disp_ymax
 
 OBJ
 
@@ -179,85 +177,48 @@ PUB Char(ch) | col, row, pos
 '   NOTE: Control codes are interpreted.
 '       To display the glyph for these characters, use char_literal(), instead
     case ch
-        7:                                      ' BEL: flash display
+        7:
+            { bell; flash display }
             displayvisibility(INVERT)
             waitms(50)
             displayvisibility(NORMAL)
-        BS, $7F:                                ' backspace
-            case pos := getpos()
-                $00..$13:
-                    if pos > $00                ' is column > 0?
-                        position(pos-1, 0)      ' backup and
-                        char_literal(" ")       '   erase char
-                        position(pos-1, 0)
-                    else                        ' left-most column
-                        position(0, 0)          ' don't go further
-                        char_literal(" ")
-                        position(0, 0)
-                $20..$33:
-                    if pos > $20
-                        col := pos-$20
-                        position(col-1, 1)
-                        char_literal(" ")
-                        position(col-1, 1)
-                    else
-                        position(19, 0)         ' for rows > 0,
-                        char_literal(" ")       ' backup to end of previous
-                        position(19, 0)         '   row
-                $40..$53:
-                    if pos > $40
-                        col := pos-$40
-                        position(col-1, 2)
-                        char_literal(" ")
-                        position(col-1, 2)
-                    else
-                        position(19, 1)
-                        char_literal(" ")
-                        position(19, 1)
-                $60..$73:
-                    if pos > $60
-                        col := pos-$60
-                        position (col-1, 3)
-                        char_literal(" ")
-                        position (col-1, 3)
-                    else
-                        position (19, 2)
-                        char_literal(" ")
-                        position (19, 2)
-                other: return
-        LF:                                     ' line-feed
-            case pos := getpos()                ' get current display pointer
-                $00..$13:                       ' currently in row 0's range,
-                    row := 1                    '   so line-feed to row 1
-                $20..$33:
-                    row := 2                    ' .. 2
-                    pos -= $20
-                $40..$53:
-                    row := 3                    ' .. 3
-                    pos -= $40
-                $60..$73:
-                    row := 3                    ' at last row; can't go
-                    pos -= $60                  '   any further
-                other:
-                    row := 0
-            position(pos, row)                  ' update position
-        CB:                                     ' clear
+        BS, $7F:
+            { backspace }
+            pos := getpos()                     ' get current display pointer
+            row := (pos / $20)                  '   extract row from it
+            col := pos - (row * $20)            '   extract column from it
+            if (col > 0)                        ' not left-most column?
+                position(col-1, row)            '   then back up one
+                wrdata(" ")                     '   erase it with a space
+                position(col-1, row)            '   move back again
+            else                                ' otherwise, see if the cursor
+                if (row > 0)                    '   can move back a row
+                    position(_disp_xmax, row-1) '   but limit to (0, 0)
+                    wrdata(" ")
+                    position(_disp_xmax, row-1)
+        LF:
+            { line-feed }
+            pos := getpos()
+            row := (pos / $20)
+            col := pos - (row * $20)
+            if (col > 0)                        ' not already on the first col?
+                col--                           '   move to col below prev char
+            if (row < _disp_ymax)               ' not already on the last row?
+                position(col, row+1)            '   go to same col, next row
+            else                                ' otherwise, go to same col,
+                position(col, 0)                '   first row
+        CB:
+            { clear display }
             clear()
-        CR:                                     ' carriage-return
-            case getpos()
-                $00..$13:
-                    row := 0
-                $20..$33:
-                    row := 1
-                $40..$53:
-                    row := 2
-                $60..$73:
-                    row := 3
-                other:
-                    return
+        CR:
+            { carriage-return }
+            pos := getpos()
+            row := (pos / $20)
+            col := pos - (row * $20)
             position(0, row)
         other:
-            wrdata(ch)                          ' write char to display
+            { displayable character }
+            wrdata(ch)
 
 PUB Char_Literal(ch)
 ' Display single character
