@@ -582,7 +582,7 @@ PUB FontWidth(sz): curr_sz
 }   _fnt_wid | _curs_invert | _disp_lines_nw, 0)
 
 PUB GetPos(): addr
-' Get current position in DDRAM
+' Get current position in display RAM
 '   Returns: Display address of current cursor position
     writereg(0, CMDSET_FUND, 0, 0)
     i2c.start()
