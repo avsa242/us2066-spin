@@ -53,7 +53,7 @@ VAR
 
     long _char_attrs
     byte _RESET
-    byte _sa0_addr
+    byte _addr_bits
 ' Variables to hold US2066 register states
     byte _mirror_h, _mirror_v
     byte _char_predef, _char_set
@@ -93,9 +93,9 @@ PUB Startx(SCL_PIN, SDA_PIN, RST_PIN, I2C_HZ, ADDR_BIT, DISP_LINES): status
             _RESET := RST_PIN
             case ADDR_BIT
                     0:
-                        _sa0_addr := 0
+                        _addr_bits := 0
                     other:
-                        _sa0_addr := 1 << 1
+                        _addr_bits := 1 << 1
             if DISP_LINES == 2
                 preset_2x16()
             elseif DISP_LINES == 4
@@ -174,7 +174,7 @@ PUB Busy(): flag
 '   Returns: TRUE (-1) if busy, FALSE (0) otherwise
     writereg(0, CMDSET_FUND, 0, 0)
     i2c.start()
-    i2c.write(SLAVE_RD | _sa0_addr)
+    i2c.write(SLAVE_RD | _addr_bits)
     flag := i2c.read(TRUE)
     i2c.stop()
 
@@ -422,7 +422,7 @@ PUB DeviceID(): id
     writereg(0, CMDSET_FUND, $00, 0)
 
     i2c.start()
-    i2c.write(SLAVE_RD | _sa0_addr)
+    i2c.write(SLAVE_RD | _addr_bits)
     i2c.read(i2c.ACK)                           ' dummy read
     id := i2c.read(i2c.NAK)                     ' Second read gets the Part ID
     i2c.stop()
@@ -589,7 +589,7 @@ PUB GetPos(): addr
 '   Returns: Display address of current cursor position
     writereg(0, CMDSET_FUND, 0, 0)
     i2c.start()
-    i2c.write(SLAVE_RD | _sa0_addr)
+    i2c.write(SLAVE_RD | _addr_bits)
     addr := i2c.read(TRUE)
     i2c.stop()
 
@@ -763,7 +763,7 @@ PUB TextDirection(direction): curr_dir
 
 PRI wrdata(databyte) | cmd_pkt
 ' Write bytes with the DATA control byte set
-    cmd_pkt.byte[0] := SLAVE_WR | _sa0_addr
+    cmd_pkt.byte[0] := SLAVE_WR | _addr_bits
     cmd_pkt.byte[1] := core.CTRLBYTE_DATA
     cmd_pkt.byte[2] := databyte
 
@@ -773,7 +773,7 @@ PRI wrdata(databyte) | cmd_pkt
 
 PRI writeReg(nr_bytes, cmd_set, cmd, val) | cmd_pkt[4]
 ' Write cmd with param 'val' from command set
-    cmd_pkt.word[0] := CMD_HDR | _sa0_addr
+    cmd_pkt.word[0] := CMD_HDR | _addr_bits
     case cmd_set
         CMDSET_FUND:
             cmd_pkt.byte[2] := cmd
