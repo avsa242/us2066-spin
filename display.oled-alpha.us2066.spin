@@ -298,7 +298,7 @@ PUB ClearLine(line)
 ' Clear specified line
 '   Valid values: 0..3 (dependent on display's total lines)
 '   Any other value is ignored
-    if lookdown(line: 0..(_disp_height-1))
+    if (line => 0) and (line =< (_disp_ymax))
         position(0, line)
         repeat _disp_width
             char(" ")

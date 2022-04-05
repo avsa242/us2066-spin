@@ -19,10 +19,10 @@ CON
     SER_BAUD    = 115_200
 
 ' uncomment one of the below pairs, depending on your display size
-    WIDTH       = 20
-    HEIGHT      = 4
-'    WIDTH       = 16
-'    HEIGHT      = 2
+'    WIDTH       = 20
+'    HEIGHT      = 4
+    WIDTH       = 16
+    HEIGHT      = 2
 
     SCL_PIN     = 28
     SDA_PIN     = 29
