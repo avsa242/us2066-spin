@@ -668,7 +668,7 @@ PUB Phase1Period(clocks)
 ' Set length of phase 1 of segment waveform of the driver
 ' Valid values: 0..32 clocks
     case clocks
-        2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32:
+        2..32:
             _phs1_per := (clocks >> 1) - 1
         other:
             return
