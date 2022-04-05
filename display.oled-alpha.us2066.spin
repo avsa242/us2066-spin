@@ -373,10 +373,8 @@ PUB CursorInvert(state): curr_state
 '       TRUE (-1 or 1): Inverted cursor
 '   Any other value returns the current setting
     case ||(state)
-        1:
-            _cursor_invert := core#CURSOR_INVERT
-        0:
-            _cursor_invert := core#CURSOR_NORMAL
+        0, 1:
+            _cursor_invert := ((state & 1) << 1)
         other:
             return _cursor_invert
 
