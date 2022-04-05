@@ -95,7 +95,7 @@ PUB Startx(SCL_PIN, SDA_PIN, RST_PIN, I2C_HZ, ADDR_BIT, DISP_LINES): status
 '  I2C_H    - I2C Bus Frequency (max 400kHz)
 '  ADDR_BIT - Flag to indicate optional alternative slave address
     if lookdown(SCL_PIN: 0..31) and lookdown(SDA_PIN: 0..31) and {
-}   I2C_HZ =< core#I2C_MAX_FREQ and lookdown(DISP_LINES: 2, 4)
+}   and lookdown(DISP_LINES: 2, 4)
         if (status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ))
             time.usleep(core#T_POR)
             _RESET := RST_PIN
