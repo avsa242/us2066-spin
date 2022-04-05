@@ -72,11 +72,11 @@ CON
         DISP_RIGHT      = %11 << 2
 
 'IS bit set 0, RE bit set 1, SD bit set 0
-    DBLHEIGHT           = $10      '$10 Double-height font setting (POR=%xxxx_11xx)
-        DBLHEIGHT_BOTTOM= %00 << 2
-        DBLHEIGHT_MIDDLE= %01 << 2
-        DBLHEIGHT_BOTH  = %10 << 2
-        DBLHEIGHT_TOP   = %11 << 2
+    DBLHT               = $10      '$10 Double-height font setting (POR=%xxxx_11xx)
+        DBLHT_BOTTOM    = %00 << 2
+        DBLHT_MIDDLE    = %01 << 2
+        DBLHT_BOTH      = %10 << 2
+        DBLHT_TOP       = %11 << 2
         DISP_SHIFT_EN   = %1
         DOT_SCROLL_EN   = %0       '(POR)
 

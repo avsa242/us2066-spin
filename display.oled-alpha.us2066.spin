@@ -534,19 +534,19 @@ PUB DoubleHeight(mode): curr_mode
 }           core#DISP_LINES_2_4 | core#DBLHT_FONT_DIS, 0)
             return
         1:
-            _dblht_mode := core#DBLHEIGHT_BOTTOM
+            _dblht_mode := core#DBLHT_BOTTOM
         2:
-            _dblht_mode := core#DBLHEIGHT_MIDDLE
+            _dblht_mode := core#DBLHT_MIDDLE
         3:
-            _dblht_mode := core#DBLHEIGHT_BOTH
+            _dblht_mode := core#DBLHT_BOTH
         4:
-            _dblht_mode := core#DBLHEIGHT_TOP
+            _dblht_mode := core#DBLHT_TOP
         other:
             return _dblht_mode
 
     _dblht_en := core#DBLHT_FONT_EN
 
-    writereg(1, CMDSET_EXTD, core#DBLHEIGHT | _dblht_mode, 0)
+    writereg(1, CMDSET_EXTD, core#DBLHT | _dblht_mode, 0)
 
 PUB DisplayVisibility(mode): curr_mode
 ' Set display visibility
