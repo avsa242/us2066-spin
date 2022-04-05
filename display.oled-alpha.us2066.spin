@@ -176,17 +176,6 @@ PUB Preset_4x20{}
     _disp_ymax := (_disp_height-1)
     _disp_lines_nw := core#NW_3_4_LINE
 
-PUB Busy{}: flag
-' Flag indicating display is busy
-'   Returns: TRUE (-1) if busy, FALSE (0) otherwise
-    writereg(0, CMDSET_FUND, 0, 0)
-    i2c.start{}
-    i2c.write(SLAVE_RD | _addr_bits)
-    flag := i2c.read(TRUE)
-    i2c.stop{}
-
-    return (((flag >> 7) & 1) == 1)
-
 PUB Char(ch) | col, row, pos
 ' Display single character.
 '   NOTE: Control codes are interpreted.
@@ -504,6 +493,17 @@ PUB DisplayLines(lines)
 }   _disp_lines_n | _dblht_en, 0)
     writereg(1, CMDSET_EXTD, core#EXTENDED_FUNCSET | {
 }   _fontwidth | _cursor_invert | _disp_lines_nw, 0)
+
+PUB DisplayReady{}: flag
+' Flag indicating display is ready
+'   Returns: TRUE (-1) or FALSE (0)
+    writereg(0, CMDSET_FUND, 0, 0)
+    i2c.start{}
+    i2c.write(SLAVE_RD | _addr_bits)
+    flag := i2c.read(i2c#NAK)
+    i2c.stop{}
+
+    return (((flag >> 7) & 1) <> 1)
 
 PUB DisplayShift(direction)
 ' Shift the display left or right by one character cell's width
