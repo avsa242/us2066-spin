@@ -1,16 +1,15 @@
 {
     --------------------------------------------
-    Filename: display.oled.us2066.i2c.spin
+    Filename: display.oled.us2066.spin
     Author: Jesse Burt
-    Description: I2C driver for US2066-based OLED
-        alphanumeric displays
+    Description: I2C driver for US2066-based OLED alphanumeric displays
     Copyright (c) 2022
     Created Dec 30, 2017
     Updated Apr 5, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
-#include "lib.terminal.spin"
+#include "terminal.common.spinh"
 
 CON
 ' I2C Defaults
@@ -79,7 +78,7 @@ OBJ
     core    : "core.con.us2066"                 ' HW-specific constants
     time    : "time"                            ' time-delay routines
 
-PUB Null{}
+PUB null{}
 ' This is not a top-level object
 
 PUB Start(RST_PIN): status
@@ -87,7 +86,7 @@ PUB Start(RST_PIN): status
 '   Specify reset pin
     return startx(DEF_SCL, DEF_SDA, RST_PIN, core#I2C_MAX_FREQ, 0, 4)
 
-PUB Startx(SCL_PIN, SDA_PIN, RST_PIN, I2C_HZ, ADDR_BIT, DISP_LINES): status
+PUB startx(SCL_PIN, SDA_PIN, RST_PIN, I2C_HZ, ADDR_BIT, DISP_LINES): status
 ' Start with custom settings
 '  SCL      - I2C Serial Clock pin
 '  SDA      - I2C Serial Data pin
@@ -116,12 +115,12 @@ PUB Startx(SCL_PIN, SDA_PIN, RST_PIN, I2C_HZ, ADDR_BIT, DISP_LINES): status
     ' Lastly - make sure you have at least one free core/cog
     return FALSE
 
-PUB Stop{}
+PUB stop{}
 ' Turn the display visibility off and stop the I2C cog
     displayvisibility(OFF)
     i2c.deinit{}
 
-PUB Defaults{}
+PUB defaults{}
 ' Factory default settings - initialize shadow registers
     _fnt_wid := core#FNTWIDTH_5
     _curs_invert := core#CURS_NORM
@@ -160,7 +159,7 @@ PUB Defaults{}
 
     _fadeblink := 0
 
-PUB Preset_2x16{}
+PUB preset_2x16{}
 ' Set up for 2x16 displays
     _disp_width := 16
     _disp_height := 2
@@ -168,7 +167,7 @@ PUB Preset_2x16{}
     _disp_ymax := (_disp_height-1)
     _disp_lines_nw := core#NW_1_2_LINE
 
-PUB Preset_4x20{}
+PUB preset_4x20{}
 ' Set up for 4x20 displays
     _disp_width := 20
     _disp_height := 4
@@ -176,7 +175,7 @@ PUB Preset_4x20{}
     _disp_ymax := (_disp_height-1)
     _disp_lines_nw := core#NW_3_4_LINE
 
-PUB Char(ch) | col, row, pos
+PUB char(ch) | col, row, pos
 ' Display single character.
 '   NOTE: Control codes are interpreted.
 '       To display the glyph for these characters, use char_literal(), instead
@@ -230,13 +229,13 @@ PUB Char(ch) | col, row, pos
     { displayable character }
     wrdata(ch)
 
-PUB CharAttrs(attr)
+PUB charattrs(attr)
 ' Set character attributes
 '   Valid values:
 '       CHAR_PROC (2) - process control codes (0 to print literal char)
     _char_attrs := attr
 
-PUB CharGen(count)
+PUB chargen(count)
 ' Select number of pre-defined vs free user-defined character cells
 '   Valid values:
 '       240 (leaves 8 available user-defined characters)
@@ -258,7 +257,7 @@ PUB CharGen(count)
     writereg(2, CMDSET_EXTD, core#FUNCT_SEL_B,{
 }   _char_predef | _char_set)
 
-PUB CharROM(char_set)
+PUB charrom(char_set)
 ' Select ROM font / character set
 '   Valid values:
 '       0: ROM A
@@ -278,11 +277,11 @@ PUB CharROM(char_set)
     writereg(2, CMDSET_EXTD, core#FUNCT_SEL_B,{
 }   _char_predef | _char_set)
 
-PUB Clear{}
+PUB clear{}
 ' Clear display
     writereg(0, CMDSET_FUND, core#CLEAR_DISP, 0)
 
-PUB ClearLine(line)
+PUB clearline(line)
 ' Clear specified line
 '   Valid values: 0..3 (dependent on display's total lines)
 '   Any other value is ignored
@@ -291,7 +290,7 @@ PUB ClearLine(line)
         repeat _disp_width
             char(" ")
 
-PUB ClockFreq(freq): curr_freq
+PUB clockfreq(freq): curr_freq
 ' Set display internal oscillator frequency, in kHz
 '   Valid values:
 '       454..556 (see lookup tables below for specific values)
@@ -309,7 +308,7 @@ PUB ClockFreq(freq): curr_freq
     writereg(1, CMDSET_OLED, core#DISP_CLKDIV_OSC,{
 }   _freq | _clkdiv)
 
-PUB ClockDiv(divider): curr_div
+PUB clockdiv(divider): curr_div
 ' Set clock frequency divider used by the display controller
 '   Valid values: 1..16 (default: 1)
     case divider
@@ -321,7 +320,7 @@ PUB ClockDiv(divider): curr_div
     writereg(1, CMDSET_OLED, core#DISP_CLKDIV_OSC,{
 }   _freq | _clkdiv)
 
-PUB COMLogicHighLevel(level): curr_lvl
+PUB comlogichighlevel(level): curr_lvl
 ' Set COMmon pins high logic level, relative to Vcc
 '   Valid values:
 '       0_65: 0.65 * Vcc
@@ -337,7 +336,7 @@ PUB COMLogicHighLevel(level): curr_lvl
 
     writereg(1, CMDSET_OLED, core#SET_VCOMH_DESEL, _vcomh_des_lvl)
 
-PUB Contrast(level): curr_con
+PUB contrast(level): curr_con
 ' Set display contrast level
 '   Valid values: 0..127 (POR: 127)
 '   Any other value returns the current setting
@@ -349,7 +348,7 @@ PUB Contrast(level): curr_con
 
     writereg(1, CMDSET_OLED, core#SET_CONTRAST, _contrast)
 
-PUB CursorBlink(state): curr_state
+PUB cursorblink(state): curr_state
 ' Enable cursor blinking
 '   Valid values:
 '      *FALSE (0): Steady cursor
@@ -366,7 +365,7 @@ PUB CursorBlink(state): curr_state
     writereg(0, CMDSET_FUND, core#DISP_ONOFF | _disp_en |{
 }   _curs_en | _blink_en, 0)
 
-PUB CursorInvert(state): curr_state
+PUB cursorinvert(state): curr_state
 ' Invert cursor
 '   Valid values:
 '      *FALSE (0): Normal cursor
@@ -381,7 +380,7 @@ PUB CursorInvert(state): curr_state
     writereg(1, CMDSET_EXTD, core#EXTD_FUNCSET |{
 }   _fnt_wid | _curs_invert | _disp_lines_nw, 0)
 
-PUB CursorMode(type)
+PUB cursormode(type)
 ' Select cursor display mode
 '   Valid values:
 '       0: No cursor
@@ -410,7 +409,7 @@ PUB CursorMode(type)
 }   _curs_en | _blink_en, 0)
     cursorinvert(_curs_invert >> 1)
 
-PUB DeviceID{}: id
+PUB deviceid{}: id
 ' Read device ID
 '   Returns: $21 if successful
     writereg(0, CMDSET_FUND, $00, 0)
@@ -421,7 +420,7 @@ PUB DeviceID{}: id
     id := i2c.read(i2c#NAK)                     ' Second read gets the Part ID
     i2c.stop{}
 
-PUB DisplayBlink(delay): curr_dly
+PUB displayblink(delay): curr_dly
 ' Set time interval for display blink/gradual fade in/out, in number of frames
 '   Valid values:
 '       0..128, in multiples of 8
@@ -437,7 +436,7 @@ PUB DisplayBlink(delay): curr_dly
 
     writereg(1, CMDSET_OLED, core#FADE_BLINK, _fadeblink)
 
-PUB DisplayFade(delay): curr_dly
+PUB displayfade(delay): curr_dly
 ' Set time interval for display fade out, in number of frames
 '   Valid values:
 '       0..128, in multiples of 8
@@ -454,7 +453,7 @@ PUB DisplayFade(delay): curr_dly
 
     writereg(1, CMDSET_OLED, core#FADE_BLINK, _fadeblink)
 
-PUB DisplayInverted(enabled)
+PUB displayinverted(enabled)
 ' Invert display colors
 '   Valid values:
 '       TRUE (-1 or 1), FALSE (0)
@@ -465,7 +464,7 @@ PUB DisplayInverted(enabled)
         other:
             return
 
-PUB DisplayLines(lines)
+PUB displaylines(lines)
 ' Set number of display lines
 '   Valid values:
 '       1..4
@@ -492,7 +491,7 @@ PUB DisplayLines(lines)
     writereg(1, CMDSET_EXTD, core#EXTD_FUNCSET | {
 }   _fnt_wid | _curs_invert | _disp_lines_nw, 0)
 
-PUB DisplayReady{}: flag
+PUB displayready{}: flag
 ' Flag indicating display is ready
 '   Returns: TRUE (-1) or FALSE (0)
     writereg(0, CMDSET_FUND, 0, 0)
@@ -503,7 +502,7 @@ PUB DisplayReady{}: flag
 
     return (((flag >> 7) & 1) <> 1)
 
-PUB DisplayShift(direction)
+PUB displayshift(direction)
 ' Shift the display left or right by one character cell's width
 '   Valid values:
 '       LEFT (2)
@@ -516,7 +515,7 @@ PUB DisplayShift(direction)
 
     writereg(0, CMDSET_FUND, core#CURS_DISP_SHIFT | direction, 0)
 
-PUB DoubleHeight(mode): curr_mode
+PUB doubleheight(mode): curr_mode
 ' Set double-height font style mode
 '   Valid values:
 '      *0: Standard height font all 4 lines / double-height disabled
@@ -548,7 +547,7 @@ PUB DoubleHeight(mode): curr_mode
 
     writereg(1, CMDSET_EXTD, core#DBLHT | _dblht_mode, 0)
 
-PUB DisplayVisibility(mode): curr_mode
+PUB displayvisibility(mode): curr_mode
 ' Set display visibility
 '   Valid values:
 '       OFF (0): Display off
@@ -574,7 +573,7 @@ PUB DisplayVisibility(mode): curr_mode
     writereg(1, CMDSET_EXTD, core#FUNCT_SET_1 |{
 }   _cgram_blink | _disp_invert, 0)
 
-PUB FontWidth(sz): curr_sz
+PUB fontwidth(sz): curr_sz
 ' Set Font width, in pixels
 '   Valid values: *5 or 6
 '   Any other value returns the current setting
@@ -589,7 +588,7 @@ PUB FontWidth(sz): curr_sz
     writereg(1, CMDSET_EXTD, core#EXTD_FUNCSET |{
 }   _fnt_wid | _curs_invert | _disp_lines_nw, 0)
 
-PUB GetPos{}: addr
+PUB getpos{}: addr
 ' Get current position in display RAM
 '   Returns: Display address of current cursor position
     writereg(0, CMDSET_FUND, 0, 0)
@@ -598,7 +597,7 @@ PUB GetPos{}: addr
     addr := i2c.read(TRUE)
     i2c.stop{}
 
-PUB GPIOState(state): curr_state
+PUB gpiostate(state): curr_state
 ' Set state of GPIO pin
 '   Valid values:
 '       0: GPIO pin HiZ, input disabled (always read as low)
@@ -620,12 +619,12 @@ PUB GPIOState(state): curr_state
     writereg(1, CMDSET_OLED, core#FUNCT_SEL_C, _ext_vsl |{
 }   _gpio_state)
 
-PUB Home{}
+PUB home{}
 ' Returns cursor to home position (0, 0)
 '   NOTE: Doesn't clear the display
     writereg(0, CMDSET_FUND, core#HOME_DISP, 0)
 
-PUB MirrorH(state): curr_state
+PUB mirrorh(state): curr_state
 ' Mirror display, horizontally
 '   Valid values: TRUE (-1 or 1), FALSE (0)
 '   Any other value returns the current setting
@@ -640,7 +639,7 @@ PUB MirrorH(state): curr_state
     writereg(1, CMDSET_EXTD, core#ENTRY_MODE_SET | _mirror_h |{
 }   _mirror_v, 0)
 
-PUB MirrorV(state): curr_state
+PUB mirrorv(state): curr_state
 ' Mirror display, vertically
 '   Valid values: TRUE (-1 or 1), FALSE (0)
 '   Any other value returns the current setting
@@ -655,7 +654,7 @@ PUB MirrorV(state): curr_state
     writereg(1, CMDSET_EXTD, core#ENTRY_MODE_SET | _mirror_h |{
 }   _mirror_v, 0)
 
-PUB PinCfg(cfg)
+PUB pincfg(cfg)
 ' Change mapping between display data column address and segment driver.
 '   Valid values:
 '       0: Sequential SEG pin cfg
@@ -672,7 +671,7 @@ PUB PinCfg(cfg)
     writereg(1, CMDSET_OLED, core#SET_SEG_PINS, _seg_remap |{
 }   _seg_pincfg)
 
-PUB Phase1Period(clocks)
+PUB phase1period(clocks)
 ' Set length of phase 1 of segment waveform of the driver
 ' Valid values: 0..32 clocks
     case clocks
@@ -684,7 +683,7 @@ PUB Phase1Period(clocks)
     writereg(1, CMDSET_OLED, core#SET_PHASE_LEN, _phs2_per |{
 }   _phs1_per)
 
-PUB Phase2Period(clocks)
+PUB phase2period(clocks)
 ' Set length of phase 2 of segment waveform of the driver
 '   Valid values: 1..15 clocks (POR: 7)
     case clocks
@@ -696,7 +695,7 @@ PUB Phase2Period(clocks)
     writereg(1, CMDSET_OLED, core#SET_PHASE_LEN, _phs2_per |{
 }   _phs1_per)
 
-PUB Position(column, row) | offset
+PUB position(column, row) | offset
 ' Set current cursor position
     case column
         0..19:
@@ -710,7 +709,7 @@ PUB Position(column, row) | offset
 
     writereg(0, CMDSET_FUND, core#SET_DDRAM_ADDR | offset, 0)
 
-PUB Reset{}
+PUB reset{}
 ' Send reset signal to display controller
     outa[_RESET] := 0
     dira[_RESET] := 1
@@ -718,7 +717,7 @@ PUB Reset{}
     outa[_RESET] := 1
     time.msleep(1)
 
-PUB SEGVoltageRef(ref): curr_ref
+PUB segvoltageref(ref): curr_ref
 ' Select segment voltage reference
 '   Valid values:
 '      *INT (0): Internal VSL
@@ -735,7 +734,7 @@ PUB SEGVoltageRef(ref): curr_ref
     writereg(1, CMDSET_OLED, core#FUNCT_SEL_C, _ext_vsl |{
 }   _gpio_state)
 
-PUB SupplyVoltage(v)
+PUB supplyvoltage(v)
 ' Set supply voltage (enable/disable internal regulator)
 '   Valid values:
 '      *5: Enable internal regulator (use for 5V operation)
@@ -751,7 +750,7 @@ PUB SupplyVoltage(v)
 
     writereg(2, CMDSET_EXTD, core#FUNCT_SEL_A, v)
 
-PUB TextDirection(direction): curr_dir
+PUB textdirection(direction): curr_dir
 ' Change mapping between display data column address and segment driver.
 '   Valid values:
 '       0: Disable SEG left/right remap
@@ -778,7 +777,7 @@ PRI wrdata(databyte) | cmd_pkt
     i2c.wrblock_lsbf(@cmd_pkt, 3)
     i2c.stop{}
 
-PRI writeReg(nr_bytes, cmd_set, cmd, val) | cmd_pkt[4]
+PRI writereg(nr_bytes, cmd_set, cmd, val) | cmd_pkt[4]
 ' Write cmd with param 'val' from command set
     cmd_pkt.word[0] := CMD_HDR | _addr_bits
     case cmd_set
@@ -845,22 +844,21 @@ PRI writeReg(nr_bytes, cmd_set, cmd, val) | cmd_pkt[4]
 
 DAT
 {
-    --------------------------------------------------------------------------------------------------------
-    TERMS OF USE: MIT License
+Copyright 2022 Jesse Burt
 
-    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-    associated documentation files (the "Software"), to deal in the Software without restriction, including
-    without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the
-    following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+associated documentation files (the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-    The above copyright notice and this permission notice shall be included in all copies or substantial
-    portions of the Software.
+The above copyright notice and this permission notice shall be included in all copies or
+substantial portions of the Software.
 
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-    LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-    --------------------------------------------------------------------------------------------------------
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
+OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 }
+

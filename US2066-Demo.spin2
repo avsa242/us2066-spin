@@ -1,12 +1,11 @@
 {
     --------------------------------------------
     Filename: OLED-US2066-Demo.spin2
-    Description: Demo of the US2066 driver
-        (P2 version)
+    Description: Demo of the US2066 driver (P2 version)
     Author: Jesse Burt
     Copyright (c) 2022
     Created Dec 30, 2017
-    Updated Apr 5, 2022
+    Updated Sep 16, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -28,7 +27,7 @@ CON
     SCL_PIN     = 32
     SDA_PIN     = 33
     RESET_PIN   = 34        ' I/O pin attached to display's RESET pin
-    I2C_HZ      = 400_000
+    I2C_FREQ    = 400_000
     SLAVE_BIT   = 0         ' Default slave address
 ' --
 
@@ -42,7 +41,7 @@ OBJ
     oled: "display.oled-alpha.us2066"
     ser : "com.serial.terminal.ansi"
 
-PUB Main()
+PUB main()
 
     setup()
     oled.charattrs(oled#CHAR_PROC)              ' process/interpret ctrl chars
@@ -86,10 +85,10 @@ PUB Main()
     oled.stop()
     repeat
 
-PUB Contrast_Demo() | i
+PUB contrast_demo() | i
 
     oled.position(0, 0)
-    oled.printf(string("Change contrast\nlevel:"), 0)
+    oled.printf(@"Change contrast\nlevel:", 0)
     case HEIGHT
         2:
             repeat i from -255 to 255 step 1
@@ -115,30 +114,30 @@ PUB Contrast_Demo() | i
 
     oled.doubleheight(0)
 
-PUB Count_Demo() | i
+PUB count_demo() | i
 
     case HEIGHT
         2:
             oled.position(0, 0)
-            oled.strln(string("Rapidly changing"))
-            oled.strln(string("display contents"))
+            oled.strln(@"Rapidly changing")
+            oled.strln(@"display contents")
             time.sleep(3)
             oled.clear()
-            oled.strln(string("Compare to LCD!"))
+            oled.strln(@"Compare to LCD!")
 
             repeat i from 0 to 3000
                 oled.position(0, 1)
-                oled.printf(string("i = %d"), i)
+                oled.printf(@"i = %d", i)
         4:
             oled.position(0, 0)
-            oled.strln(string("Rapidly changing"))
-            oled.strln(string("display contents"))
-            oled.strln(string("(compare to LCD!)"))
+            oled.strln(@"Rapidly changing")
+            oled.strln(@"display contents")
+            oled.strln(@"(compare to LCD!)")
             repeat i from 0 to 3000
                 oled.position(0, 3)
-                oled.printf(string("i = %d"), i)
+                oled.printf(@"i = %d", i)
 
-PUB Cursor_demo() | delay, dbl_mode
+PUB cursor_demo() | delay, dbl_mode
 
     delay := 25                                 ' milliseconds
     case HEIGHT
@@ -148,25 +147,25 @@ PUB Cursor_demo() | delay, dbl_mode
                 oled.doubleheight(dbl_mode)
                 oled.cursormode(0)
                 oled.position(0, 0)
-                strdelay(string("No cursor  (0)"), delay)
+                strdelay(@"No cursor  (0)", delay)
                 time.sleep(2)
                 oled.clearline(0)
 
                 oled.cursormode(1)
                 oled.position(0, 0)
-                strdelay(string("Block/blink(1)"), delay)
+                strdelay(@"Block/blink(1)", delay)
                 time.sleep(2)
                 oled.clearline(0)
 
                 oled.cursormode(2)
                 oled.position(0, 0)
-                strdelay(string("Underscore (2)"), delay)
+                strdelay(@"Underscore (2)", delay)
                 time.sleep(2)
                 oled.clearline(0)
 
                 oled.cursormode(3)
                 oled.position(0, 0)
-                strdelay(string("Under./blink(3)"), delay)
+                strdelay(@"Under./blink(3)", delay)
                 time.sleep(2)
         4:
             repeat dbl_mode from 0 to 2 step 2
@@ -174,34 +173,34 @@ PUB Cursor_demo() | delay, dbl_mode
                 oled.doubleheight(dbl_mode)
                 oled.cursormode(0)
                 oled.position(0, 0)
-                strdelay(string("Cursor:"), delay)
+                strdelay(@"Cursor:", delay)
 
                 oled.position(0, 1)
-                strdelay(string("None           (0)"), delay)
+                strdelay(@"None           (0)", delay)
                 time.sleep(2)
                 oled.clearline(1)
 
                 oled.cursormode(1)
                 oled.position(0, 1)
-                strdelay(string("Block/blink    (1)"), delay)
+                strdelay(@"Block/blink    (1)", delay)
                 time.sleep(2)
                 oled.clearline(1)
 
                 oled.cursormode(2)
                 oled.position(0, 1)
-                strdelay(string("Underscore     (2)"), delay)
+                strdelay(@"Underscore     (2)", delay)
                 time.sleep(2)
                 oled.clearline(1)
 
                 oled.cursormode(3)
                 oled.position(0, 1)
-                strdelay(string("Underscore/blink(3)"), delay)
+                strdelay(@"Underscore/blink(3)", delay)
                 time.sleep(2)
 
     oled.doubleheight(0)
     oled.cursormode(0)
 
-PUB DoubleHeight_Demo() | mode, line
+PUB doubleheight_demo() | mode, line
 
     case HEIGHT
         2:
@@ -210,7 +209,7 @@ PUB DoubleHeight_Demo() | mode, line
                 oled.doubleheight(mode)
                 repeat line from 0 to 1
                     oled.position(0, line)
-                    oled.str(string("Double-height"))
+                    oled.str(@"Double-height")
                 time.sleep(MODE_DELAY)
                 mode += 3
                 if mode > 3
@@ -220,13 +219,13 @@ PUB DoubleHeight_Demo() | mode, line
             repeat mode from 0 to 4
                 oled.doubleheight(mode)
                 oled.position(14, 0)
-                oled.printf(string("Mode %d"), mode, 0, 0, 0, 0, 0)
+                oled.printf(@"Mode %d", mode)
                 repeat line from 0 to 3
                     oled.position(0, line)
-                    oled.str(string("Double-height"))
+                    oled.str(@"Double-height")
                 time.sleep(MODE_DELAY)
 
-PUB FontWidth_demo() | px, dbl_mode
+PUB fontwidth_demo() | px, dbl_mode
 
     oled.clear()
 
@@ -236,13 +235,13 @@ PUB FontWidth_demo() | px, dbl_mode
             repeat px from 6 to 5
                 oled.fontwidth(px)
                 oled.position(0, 0)
-                oled.printf(string("%d-pixel width"), px)
+                oled.printf(@"%d-pixel width", px)
                 time.sleep(MODE_DELAY)
 
     oled.fontwidth(5)
     oled.doubleheight(0)
 
-PUB Greet_Demo()
+PUB greet_demo()
 
     case HEIGHT
         2:
@@ -272,23 +271,23 @@ PUB Greet_Demo()
 
     time.sleep(1)
 
-PUB Invert_demo() | i
+PUB invert_demo() | i
 
     oled.clear()
     oled.position(0, 0)
-    oled.str(string("Display"))
+    oled.str(@"Display")
 
     repeat i from 1 to 3
         oled.displayinverted(TRUE)
         oled.position(WIDTH-8, HEIGHT-1)
-        oled.str(string("INVERTED"))
+        oled.str(@"INVERTED")
         time.sleep(MODE_DELAY)
         oled.displayinverted(FALSE)
         oled.position(WIDTH-8, HEIGHT-1)
-        oled.str(string("NORMAL  "))
+        oled.str(@"NORMAL  ")
         time.sleep(MODE_DELAY)
 
-PUB Mirror_Demo() | row, col
+PUB mirror_demo() | row, col
 
     oled.clear()
 
@@ -304,66 +303,66 @@ PUB Mirror_Demo() | row, col
     oled.mirrorv(FALSE)
     oled.clearline(0)
     oled.position(0, 0)
-    oled.str(string("Mirror OFF"))
+    oled.str(@"Mirror OFF")
     time.sleep(2)
 
     oled.mirrorh(TRUE)
     oled.mirrorv(FALSE)
     oled.clearline(0)
     oled.position(col, 0)
-    oled.str(string("Mirror HORIZ."))
+    oled.str(@"Mirror HORIZ.")
     time.sleep(2)
 
     oled.mirrorh(FALSE)
     oled.mirrorv(TRUE)
     oled.clearline(0)
     oled.position(0, row)
-    oled.str(string("Mirror VERT."))
+    oled.str(@"Mirror VERT.")
     time.sleep(2)
 
     oled.mirrorh(TRUE)
     oled.mirrorv(TRUE)
     oled.clearline(0)
     oled.position(col, row)
-    oled.str(string("Mirror BOTH"))
+    oled.str(@"Mirror BOTH")
     time.sleep(2)
 
     oled.clear()
     oled.mirrorh(FALSE)
     oled.mirrorv(FALSE)
 
-PUB Position_Demo() | x, y
+PUB position_demo() | x, y
 
     repeat y from 0 to HEIGHT-1
         repeat x from 0 to WIDTH-1
             oled.position(0, 0)
-            oled.printf(string("Position %d,%d "), x, y)
+            oled.printf(@"Position %d,%d ", x, y)
             oled.position((x-1 #> 0), y)
             oled.char(" ")
             oled.char("-")
             waitms(25)
 
-PRI StrDelay(stringptr, delay)
+PRI strdelay(stringptr, delay)
 ' Display zero-terminated string with inter-character delay, in ms
     repeat strsize(stringptr)
         oled.char(byte[stringptr++])
         waitms(delay)
 
-PUB Setup()
+PUB setup()
 
     ser.start(SER_BAUD)
     waitms(30)
     ser.clear()
-    ser.strln(string("Serial terminal started"))
+    ser.strln(@"Serial terminal started")
 
     ' use default Propeller I2C pins and 100kHz. Specify reset pin
 '    if oled.start(RESET_PIN)
 
     ' use all custom settings
-    if oled.startx(SCL_PIN, SDA_PIN, RESET_PIN, I2C_HZ, SLAVE_BIT, HEIGHT)
-        ser.strln(string("US2066 driver started"))
+    if oled.startx(SCL_PIN, SDA_PIN, RESET_PIN, I2C_FREQ, SLAVE_BIT, HEIGHT)
+        ser.strln(@"US2066 driver started")
     else
-        ser.strln(string("US2066 driver failed to start - halting"))
+        ser.strln(@"US2066 driver failed to start - halting")
         oled.stop()
         waitms(500)
         repeat
@@ -383,7 +382,6 @@ DAT
 
 '                  0|    |    |    |   |19
     w20l1   byte{0}"    Parallax P2     ", 0
-
     w20l2   byte{1}"       on the       ", 0
     w20l3   byte{2}"    US2066 OLED     ", 0
     w20l4   byte{3}"        4x20        ", 0
@@ -391,22 +389,21 @@ DAT
 
 DAT
 {
-    --------------------------------------------------------------------------------------------------------
-    TERMS OF USE: MIT License
+Copyright 2022 Jesse Burt
 
-    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-    associated documentation files (the "Software"), to deal in the Software without restriction, including
-    without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the
-    following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+associated documentation files (the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-    The above copyright notice and this permission notice shall be included in all copies or substantial
-    portions of the Software.
+The above copyright notice and this permission notice shall be included in all copies or
+substantial portions of the Software.
 
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-    LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-    --------------------------------------------------------------------------------------------------------
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
+OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 }
+

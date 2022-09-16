@@ -5,7 +5,7 @@
     Author: Jesse Burt
     Copyright (c) 2022
     Created Dec 30, 2017
-    Updated Apr 5, 2022
+    Updated Sep 16, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -27,7 +27,7 @@ CON
     SCL_PIN     = 28
     SDA_PIN     = 29
     RESET_PIN   = 25        ' I/O pin attached to display's RESET pin
-    I2C_HZ      = 400_000
+    I2C_FREQ    = 400_000
     SLAVE_BIT   = 0         ' Default slave address
 ' --
 
@@ -41,7 +41,7 @@ OBJ
     oled: "display.oled-alpha.us2066"
     ser : "com.serial.terminal.ansi"
 
-PUB Main{}
+PUB main{}
 
     setup{}
     oled.charattrs(oled#CHAR_PROC)              ' process/interpret ctrl chars
@@ -85,7 +85,7 @@ PUB Main{}
     oled.stop{}
     repeat
 
-PUB Contrast_Demo{} | i
+PUB contrast_demo{} | i
 
     oled.position(0, 0)
     oled.printf1(string("Change contrast\nlevel:"), 0)
@@ -114,7 +114,7 @@ PUB Contrast_Demo{} | i
 
     oled.doubleheight(0)
 
-PUB Count_Demo{} | i
+PUB count_demo{} | i
 
     case HEIGHT
         2:
@@ -137,7 +137,7 @@ PUB Count_Demo{} | i
                 oled.position(0, 3)
                 oled.printf1(string("i = %d"), i)
 
-PUB Cursor_demo{} | delay, dbl_mode
+PUB cursor_demo{} | delay, dbl_mode
 
     delay := 25                                 ' milliseconds
     case HEIGHT
@@ -200,7 +200,7 @@ PUB Cursor_demo{} | delay, dbl_mode
     oled.doubleheight(0)
     oled.cursormode(0)
 
-PUB DoubleHeight_Demo{} | mode, line
+PUB doubleheight_demo{} | mode, line
 
     case HEIGHT
         2:
@@ -219,13 +219,13 @@ PUB DoubleHeight_Demo{} | mode, line
             repeat mode from 0 to 4
                 oled.doubleheight(mode)
                 oled.position(14, 0)
-                oled.printf(string("Mode %d"), mode, 0, 0, 0, 0, 0)
+                oled.printf1(string("Mode %d"), mode)
                 repeat line from 0 to 3
                     oled.position(0, line)
                     oled.str(string("Double-height"))
                 time.sleep(MODE_DELAY)
 
-PUB FontWidth_demo{} | px, dbl_mode
+PUB fontwidth_demo{} | px, dbl_mode
 
     oled.clear{}
 
@@ -241,7 +241,7 @@ PUB FontWidth_demo{} | px, dbl_mode
     oled.fontwidth(5)
     oled.doubleheight(0)
 
-PUB Greet_Demo{}
+PUB greet_demo{}
 
     case HEIGHT
         2:
@@ -271,7 +271,7 @@ PUB Greet_Demo{}
 
     time.sleep(1)
 
-PUB Invert_demo{} | i
+PUB invert_demo{} | i
 
     oled.clear{}
     oled.position(0, 0)
@@ -287,7 +287,7 @@ PUB Invert_demo{} | i
         oled.str(string("NORMAL  "))
         time.sleep(MODE_DELAY)
 
-PUB Mirror_Demo{} | row, col
+PUB mirror_demo{} | row, col
 
     oled.clear{}
 
@@ -331,7 +331,7 @@ PUB Mirror_Demo{} | row, col
     oled.mirrorh(FALSE)
     oled.mirrorv(FALSE)
 
-PUB Position_Demo{} | x, y
+PUB position_demo{} | x, y
 
     repeat y from 0 to HEIGHT-1
         repeat x from 0 to WIDTH-1
@@ -342,13 +342,13 @@ PUB Position_Demo{} | x, y
             oled.char("-")
             time.msleep(25)
 
-PRI StrDelay(stringptr, delay)
+PRI strdelay(stringptr, delay)
 ' Display zero-terminated string with inter-character delay, in ms
     repeat strsize(stringptr)
         oled.char(byte[stringptr++])
         time.msleep(delay)
 
-PUB Setup{}
+PUB setup{}
 
     ser.start(SER_BAUD)
     time.msleep(30)
@@ -359,7 +359,7 @@ PUB Setup{}
 '    if oled.start(RESET_PIN)
 
     ' use all custom settings
-    if oled.startx(SCL_PIN, SDA_PIN, RESET_PIN, I2C_HZ, SLAVE_BIT, HEIGHT)
+    if oled.startx(SCL_PIN, SDA_PIN, RESET_PIN, I2C_FREQ, SLAVE_BIT, HEIGHT)
         ser.strln(string("US2066 driver started"))
     else
         ser.strln(string("US2066 driver failed to start - halting"))
@@ -390,22 +390,21 @@ DAT
 
 DAT
 {
-    --------------------------------------------------------------------------------------------------------
-    TERMS OF USE: MIT License
+Copyright 2022 Jesse Burt
 
-    Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
-    associated documentation files (the "Software"), to deal in the Software without restriction, including
-    without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-    copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the
-    following conditions:
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
+associated documentation files (the "Software"), to deal in the Software without restriction,
+including without limitation the rights to use, copy, modify, merge, publish, distribute,
+sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-    The above copyright notice and this permission notice shall be included in all copies or substantial
-    portions of the Software.
+The above copyright notice and this permission notice shall be included in all copies or
+substantial portions of the Software.
 
-    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
-    LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
-    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
-    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
-    SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-    --------------------------------------------------------------------------------------------------------
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
+NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
+OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 }
+
