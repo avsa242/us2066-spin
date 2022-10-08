@@ -56,9 +56,10 @@ CON
         BLINK_OFF       = %0       '(POR)
 
 'RE bit set 1, SD bit set 0
-    EXTD_FUNCSET        = $08      '$08 Assign font width, black/white inverting of cursor, and 4-line display mode control bit
-        FNTWIDTH_6      = %1 << 2
-        FNTWIDTH_5      = %0 << 2  '(POR)
+    EXTD_FUNCSET        = $08
+        FNTWIDTH        = 2
+        FNTWIDTH_6      = %1 << FNTWIDTH
+        FNTWIDTH_5      = %0 << FNTWIDTH
         CURS_INVERT     = %1 << 1
         CURS_NORM       = %0 << 1  '(POR)
         NW_3_4_LINE     = %1
@@ -132,20 +133,35 @@ CON
         OLED_CMDSET_DIS = OLED_CHR|%0       ' $78 %0111_100_0   SD = %0: (POR) OLED Command set disabled
 
     SET_CONTRAST        = $81      ' $81 Select contrast. %0000_0000 .. %1111_1111 (POR %0111_1111)
-    DISP_CLKDIV_OSC     = $D5      ' $D5 Oscillator freq (4 MSBs, POR=%0111). Display clock divisor (4 LSBs, POR=%0000, divisor=value+1). Range for both is %0000-%1111
+
+    DISP_CLKDIV_OSC     = $D5
+    DISP_CLKDIV_OSC_MASK= $FF
+        OSC_FREQ        = 4
+        CLK_DIV         = 0
+        OSC_FREQ_BITS   = %1111
+        CLK_DIV_BITS    = %1111
+        OSC_FREQ_MASK   = (OSC_FREQ_BITS << OSC_FREQ) ^ DISP_CLKDIV_OSC_MASK
+        CLK_DIV_MASK    = (CLK_DIV_BITS ^ DISP_CLKDIV_OSC_MASK)
+
     SET_PHASE_LEN       = $D9      ' $D9 Segment waveform length (unit=DCLKs). Phase 2 (MSBs, POR=%0111) range %0001..%1111, Phase 1 (LSBs, POR=%1000) range %0010..%1111
 
     SET_SEG_PINS        = $DA      ' $DA Set SEG pins hardware configuration
-        SEG_LR_REMAP_EN = %1 <<5
-        SEG_LR_REMAP_DIS= %0 <<5
-        SEQ_SEGPINCFG   = %1 <<4
-        ALT_SEGPINCFG   = %0 <<4
+        SEG_LR_REMAP    = 5
+        SEG_LR_REMAP_EN = %1 << SEG_LR_REMAP
+        SEG_LR_REMAP_DIS= %0 << SEG_LR_REMAP
+        ALT_SEGPINCFG   = %1 << 4
+        SEQ_SEGPINCFG   = %0 << 4
 
-    SET_VCOMH_DESEL     = $DB      ' $DB Adjust Vcomh regulator output
+    SET_VCOMH_DESEL     = $DB
+    SET_VCOMH_DESEL_MASK= $70
+        VCOMH           = 4
+        VCOMH_BITS      = %111
+        VCOMH_MASK      = (VCOMH_BITS << VCOMH) ^ SET_VCOMH_DESEL_MASK
 
     FUNCT_SEL_C         = $DC      ' $DC Set VSL/GPIO
-        VSL_INT         = %0 << 7
-        VSL_EXT         = %1 << 7
+        VSL             = 7
+        VSL_INT         = %0 << VSL
+        VSL_EXT         = %1 << VSL
         GPIO_HIZ_INP_DIS= %00
         GPIO_HIZ_INP_ENA= %01
         GPIO_OUT_LOW    = %10

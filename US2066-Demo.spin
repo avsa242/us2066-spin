@@ -5,7 +5,7 @@
     Author: Jesse Burt
     Copyright (c) 2022
     Created Dec 30, 2017
-    Updated Sep 16, 2022
+    Updated Oct 8, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -26,13 +26,13 @@ CON
 
     SCL_PIN     = 28
     SDA_PIN     = 29
-    RESET_PIN   = 25        ' I/O pin attached to display's RESET pin
+    RESET_PIN   = 25                            ' optional (-1 to disable)
     I2C_FREQ    = 400_000
-    SLAVE_BIT   = 0         ' Default slave address
+    ADDR_BITS   = 0                             ' 0, 1
 ' --
 
-    DEMO_DELAY  = 2         ' Delay (sec) between different demos
-    MODE_DELAY  = 1         ' Delay (sec) between different modes within a particular demo
+    DEMO_DELAY  = 2                             ' seconds between demos
+    MODE_DELAY  = 1                             ' seconds between sub-demos
 
 OBJ
 
@@ -44,7 +44,7 @@ OBJ
 PUB main{}
 
     setup{}
-    oled.charattrs(oled#CHAR_PROC)              ' process/interpret ctrl chars
+    oled.char_attrs(oled#CHAR_PROC)              ' process/interpret ctrl chars
 
     greet_demo{}
     time.sleep(DEMO_DELAY)
@@ -54,7 +54,7 @@ PUB main{}
     time.sleep(DEMO_DELAY)
     oled.clear{}
 
-    doubleheight_demo{}
+    dbl_height_demo{}
     time.sleep(DEMO_DELAY)
     oled.clear{}
 
@@ -74,7 +74,7 @@ PUB main{}
     time.sleep(DEMO_DELAY)
     oled.clear{}
 
-    fontwidth_demo{}
+    fnt_width_demo{}
     time.sleep(DEMO_DELAY)
     oled.clear{}
 
@@ -87,12 +87,12 @@ PUB main{}
 
 PUB contrast_demo{} | i
 
-    oled.position(0, 0)
+    oled.pos_xy(0, 0)
     oled.printf1(string("Change contrast\nlevel:"), 0)
     case HEIGHT
         2:
             repeat i from -255 to 255 step 1
-                oled.position(7, 1)
+                oled.pos_xy(7, 1)
                 oled.contrast(||(i))
                 oled.decuns(||(i), 3)
                 oled.char(" ")
@@ -100,10 +100,10 @@ PUB contrast_demo{} | i
                 time.msleep(10)
         4:
             oled.newline{}
-            oled.doubleheight(1)
+            oled.dbl_height(1)
 
             repeat i from -255 to 255 step 1
-                oled.position(0, 2)
+                oled.pos_xy(0, 2)
                 oled.contrast(||(i))
                 oled.decuns(||(i), 3)
                 oled.char(" ")
@@ -112,13 +112,13 @@ PUB contrast_demo{} | i
                 oled.bin(||(i), 8)
                 time.msleep(10)
 
-    oled.doubleheight(0)
+    oled.dbl_height(0)
 
 PUB count_demo{} | i
 
     case HEIGHT
         2:
-            oled.position(0, 0)
+            oled.pos_xy(0, 0)
             oled.strln(string("Rapidly changing"))
             oled.strln(string("display contents"))
             time.sleep(3)
@@ -126,15 +126,15 @@ PUB count_demo{} | i
             oled.strln(string("Compare to LCD!"))
 
             repeat i from 0 to 3000
-                oled.position(0, 1)
+                oled.pos_xy(0, 1)
                 oled.printf1(string("i = %d"), i)
         4:
-            oled.position(0, 0)
+            oled.pos_xy(0, 0)
             oled.strln(string("Rapidly changing"))
             oled.strln(string("display contents"))
             oled.strln(string("(compare to LCD!)"))
             repeat i from 0 to 3000
-                oled.position(0, 3)
+                oled.pos_xy(0, 3)
                 oled.printf1(string("i = %d"), i)
 
 PUB cursor_demo{} | delay, dbl_mode
@@ -144,129 +144,129 @@ PUB cursor_demo{} | delay, dbl_mode
         2:
             repeat dbl_mode from 0 to 3 step 3
                 oled.clear{}
-                oled.doubleheight(dbl_mode)
-                oled.cursormode(0)
-                oled.position(0, 0)
+                oled.dbl_height(dbl_mode)
+                oled.cursor_mode(0)
+                oled.pos_xy(0, 0)
                 strdelay(string("No cursor  (0)"), delay)
                 time.sleep(2)
-                oled.clearline(0)
+                oled.clear_line(0)
 
-                oled.cursormode(1)
-                oled.position(0, 0)
+                oled.cursor_mode(1)
+                oled.pos_xy(0, 0)
                 strdelay(string("Block/blink(1)"), delay)
                 time.sleep(2)
-                oled.clearline(0)
+                oled.clear_line(0)
 
-                oled.cursormode(2)
-                oled.position(0, 0)
+                oled.cursor_mode(2)
+                oled.pos_xy(0, 0)
                 strdelay(string("Underscore (2)"), delay)
                 time.sleep(2)
-                oled.clearline(0)
+                oled.clear_line(0)
 
-                oled.cursormode(3)
-                oled.position(0, 0)
+                oled.cursor_mode(3)
+                oled.pos_xy(0, 0)
                 strdelay(string("Under./blink(3)"), delay)
                 time.sleep(2)
         4:
             repeat dbl_mode from 0 to 2 step 2
                 oled.clear{}
-                oled.doubleheight(dbl_mode)
-                oled.cursormode(0)
-                oled.position(0, 0)
+                oled.dbl_height(dbl_mode)
+                oled.cursor_mode(0)
+                oled.pos_xy(0, 0)
                 strdelay(string("Cursor:"), delay)
 
-                oled.position(0, 1)
+                oled.pos_xy(0, 1)
                 strdelay(string("None           (0)"), delay)
                 time.sleep(2)
-                oled.clearline(1)
+                oled.clear_line(1)
 
-                oled.cursormode(1)
-                oled.position(0, 1)
+                oled.cursor_mode(1)
+                oled.pos_xy(0, 1)
                 strdelay(string("Block/blink    (1)"), delay)
                 time.sleep(2)
-                oled.clearline(1)
+                oled.clear_line(1)
 
-                oled.cursormode(2)
-                oled.position(0, 1)
+                oled.cursor_mode(2)
+                oled.pos_xy(0, 1)
                 strdelay(string("Underscore     (2)"), delay)
                 time.sleep(2)
-                oled.clearline(1)
+                oled.clear_line(1)
 
-                oled.cursormode(3)
-                oled.position(0, 1)
+                oled.cursor_mode(3)
+                oled.pos_xy(0, 1)
                 strdelay(string("Underscore/blink(3)"), delay)
                 time.sleep(2)
 
-    oled.doubleheight(0)
-    oled.cursormode(0)
+    oled.dbl_height(0)
+    oled.cursor_mode(0)
 
-PUB doubleheight_demo{} | mode, line
+PUB dbl_height_demo{} | mode, line
 
     case HEIGHT
         2:
             mode := 0
             repeat 6
-                oled.doubleheight(mode)
+                oled.dbl_height(mode)
                 repeat line from 0 to 1
-                    oled.position(0, line)
+                    oled.pos_xy(0, line)
                     oled.str(string("Double-height"))
                 time.sleep(MODE_DELAY)
                 mode += 3
                 if mode > 3
                     mode  := 0
-            oled.doubleheight(0)
+            oled.dbl_height(0)
         4:
             repeat mode from 0 to 4
-                oled.doubleheight(mode)
-                oled.position(14, 0)
+                oled.dbl_height(mode)
+                oled.pos_xy(14, 0)
                 oled.printf1(string("Mode %d"), mode)
                 repeat line from 0 to 3
-                    oled.position(0, line)
+                    oled.pos_xy(0, line)
                     oled.str(string("Double-height"))
                 time.sleep(MODE_DELAY)
 
-PUB fontwidth_demo{} | px, dbl_mode
+PUB fnt_width_demo{} | px, dbl_mode
 
     oled.clear{}
 
     repeat dbl_mode from 0 to 3 step 3
-        oled.doubleheight(dbl_mode)
+        oled.dbl_height(dbl_mode)
         repeat 2
             repeat px from 6 to 5
-                oled.fontwidth(px)
-                oled.position(0, 0)
+                oled.fnt_width(px)
+                oled.pos_xy(0, 0)
                 oled.printf1(string("%d-pixel width"), px)
                 time.sleep(MODE_DELAY)
 
-    oled.fontwidth(5)
-    oled.doubleheight(0)
+    oled.fnt_width(5)
+    oled.dbl_height(0)
 
 PUB greet_demo{}
 
     case HEIGHT
         2:
-            oled.position(0, 0)
+            oled.pos_xy(0, 0)
             oled.str(@w16l1)
             time.sleep(1)
 
-            oled.position(0, 1)
+            oled.pos_xy(0, 1)
             oled.str(@w16l2)
             time.sleep(1)
 
         4:
-            oled.position(0, 0)
+            oled.pos_xy(0, 0)
             oled.str(@w20l1)
             time.sleep(1)
 
-            oled.position(0, 1)
+            oled.pos_xy(0, 1)
             oled.str(@w20l2)
             time.sleep(1)
 
-            oled.position(0, 2)
+            oled.pos_xy(0, 2)
             oled.str(@w20l3)
             time.sleep(1)
 
-            oled.position(0, 3)
+            oled.pos_xy(0, 3)
             oled.str(@w20l4)
 
     time.sleep(1)
@@ -274,16 +274,16 @@ PUB greet_demo{}
 PUB invert_demo{} | i
 
     oled.clear{}
-    oled.position(0, 0)
+    oled.pos_xy(0, 0)
     oled.str(string("Display"))
 
     repeat i from 1 to 3
-        oled.displayinverted(TRUE)
-        oled.position(WIDTH-8, HEIGHT-1)
+        oled.disp_inverted(TRUE)
+        oled.pos_xy(WIDTH-8, HEIGHT-1)
         oled.str(string("INVERTED"))
         time.sleep(MODE_DELAY)
-        oled.displayinverted(FALSE)
-        oled.position(WIDTH-8, HEIGHT-1)
+        oled.disp_inverted(FALSE)
+        oled.pos_xy(WIDTH-8, HEIGHT-1)
         oled.str(string("NORMAL  "))
         time.sleep(MODE_DELAY)
 
@@ -299,45 +299,45 @@ PUB mirror_demo{} | row, col
             row := 0
             col := WIDTH-13
 
-    oled.mirrorh(FALSE)
-    oled.mirrorv(FALSE)
-    oled.clearline(0)
-    oled.position(0, 0)
+    oled.mirror_h(FALSE)
+    oled.mirror_v(FALSE)
+    oled.clear_line(0)
+    oled.pos_xy(0, 0)
     oled.str(string("Mirror OFF"))
     time.sleep(2)
 
-    oled.mirrorh(TRUE)
-    oled.mirrorv(FALSE)
-    oled.clearline(0)
-    oled.position(col, 0)
+    oled.mirror_h(TRUE)
+    oled.mirror_v(FALSE)
+    oled.clear_line(0)
+    oled.pos_xy(col, 0)
     oled.str(string("Mirror HORIZ."))
     time.sleep(2)
 
-    oled.mirrorh(FALSE)
-    oled.mirrorv(TRUE)
-    oled.clearline(0)
-    oled.position(0, row)
+    oled.mirror_h(FALSE)
+    oled.mirror_v(TRUE)
+    oled.clear_line(0)
+    oled.pos_xy(0, row)
     oled.str(string("Mirror VERT."))
     time.sleep(2)
 
-    oled.mirrorh(TRUE)
-    oled.mirrorv(TRUE)
-    oled.clearline(0)
-    oled.position(col, row)
+    oled.mirror_h(TRUE)
+    oled.mirror_v(TRUE)
+    oled.clear_line(0)
+    oled.pos_xy(col, row)
     oled.str(string("Mirror BOTH"))
     time.sleep(2)
 
     oled.clear{}
-    oled.mirrorh(FALSE)
-    oled.mirrorv(FALSE)
+    oled.mirror_h(FALSE)
+    oled.mirror_v(FALSE)
 
 PUB position_demo{} | x, y
 
     repeat y from 0 to HEIGHT-1
         repeat x from 0 to WIDTH-1
-            oled.position(0, 0)
+            oled.pos_xy(0, 0)
             oled.printf2(string("Position %d,%d "), x, y)
-            oled.position((x-1 #> 0), y)
+            oled.pos_xy((x-1 #> 0), y)
             oled.char(" ")
             oled.char("-")
             time.msleep(25)
@@ -359,20 +359,17 @@ PUB setup{}
 '    if oled.start(RESET_PIN)
 
     ' use all custom settings
-    if oled.startx(SCL_PIN, SDA_PIN, RESET_PIN, I2C_FREQ, SLAVE_BIT, HEIGHT)
+    if oled.startx(SCL_PIN, SDA_PIN, RESET_PIN, I2C_FREQ, ADDR_BITS, HEIGHT)
         ser.strln(string("US2066 driver started"))
     else
         ser.strln(string("US2066 driver failed to start - halting"))
-        oled.stop{}
-        time.msleep(500)
-        ser.stop{}
         repeat
 
-    oled.mirrorh(FALSE)
-    oled.mirrorv(FALSE)
+    oled.mirror_h(FALSE)
+    oled.mirror_v(FALSE)
     oled.clear{}
-    oled.position(0, 0)
-    oled.displayvisibility(oled#NORM)
+    oled.pos_xy(0, 0)
+    oled.disp_vis_ena(oled#NORM)
     time.msleep(100)
 
 DAT
