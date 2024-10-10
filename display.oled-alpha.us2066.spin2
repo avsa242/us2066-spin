@@ -1,23 +1,41 @@
 {
-    --------------------------------------------
-    Filename: display.oled.us2066.spin2
-    Author: Jesse Burt
-    Description: Driver for US2066-based OLED alphanumeric displays (P2 version)
-    Copyright (c) 2022
-    Created Dec 30, 2017
-    Updated Dec 3, 2022
-    See end of file for terms of use.
-    --------------------------------------------
+----------------------------------------------------------------------------------------------------
+    Filename:       display.oled.us2066.spin2
+    Description:    Driver for US2066-based OLED alphanumeric displays
+    Author:         Jesse Burt
+    Started:        Dec 30, 2017
+    Updated:        Oct 8, 2024
+    Copyright (c) 2024 - See end of file for terms of use.
+----------------------------------------------------------------------------------------------------
 }
-#include "terminal.common.spin2h"
+
+#include "terminal.common.spin2h"               ' use code common to all terminal I/O drivers
 
 CON
-' I2C Defaults
+
+    { default I/O settings; these can be overridden in the parent object }
+    { display dimensions }
+    WIDTH           = 4
+    HEIGHT          = 20
+
+    { I2C }
+    SCL             = 0
+    SDA             = 1
+    RST             = 0
+    I2C_FREQ        = 100_000
+    I2C_ADDR        = 0
+
+
+    XMAX            = WIDTH-1
+    YMAX            = HEIGHT-1
+    CENTERX         = WIDTH/2
+    CENTERY         = HEIGHT/2
+
+
+    ' I2C driver internal
     SLAVE_WR        = core.SLAVE_ADDR
     SLAVE_RD        = SLAVE_WR|1
     R               = 1
-
-    DEF_HZ          = 100_000
     I2C_MAX_FREQ    = core.I2C_MAX_FREQ
 
 ' Build some basic headers for I2C transactions
@@ -48,6 +66,7 @@ CON
 ' Character attributes
     CHAR_PROC       = (1 << 1)
 
+
 VAR
 
     long _char_attrs
@@ -71,46 +90,60 @@ VAR
     byte _fadeblink
     byte _disp_width, _disp_height, _disp_xmax, _disp_ymax
 
+
 OBJ
 
     i2c     : "com.i2c"                         ' I2C engine
     core    : "core.con.us2066"                 ' HW-specific constants
 
+
 PUB null()
 ' This is not a top-level object
 
-PUB startx(SCL_PIN, SDA_PIN, RST_PIN, I2C_HZ, ADDR_BIT, DISP_LINES): status
-' Start with custom settings
-'  SCL      - I2C Serial Clock pin
-'  SDA      - I2C Serial Data pin
-'  RST_PIN  - OLED display's assigned reset pin
-'  I2C_HZ   - I2C Bus Frequency (max 400kHz)
-'  ADDR_BIT - Flag to indicate optional alternative slave address
-    if (lookdown(SCL_PIN: 0..63) and lookdown(SDA_PIN: 0..63) and lookdown(DISP_LINES: 2, 4))
-        if (status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ))
+
+PUB start(): status
+' Start using default I/O settings
+    return startx(SCL, SDA, RST, I2C_FREQ, I2C_ADDR, HEIGHT)
+
+
+PUB startx(SCL_PIN, SDA_PIN, RST_PIN, I2C_HZ, ADDR_BITS, DISP_HT): status
+' Start the driver with custom I/O settings
+'   SCL_PIN:    I2C clock, 0..31
+'   SDA_PIN:    I2C data, 0..31
+'   RST_PIN:    display reset, 0..31 (optional; use -1 to disable)
+'   I2C_HZ:     I2C clock speed (max official specification is 400_000 but is unenforced)
+'   ADDR_BITS:  I2C alternate address bit, 0..1
+'   DISP_HT:    display height (2, 4 are common heights)
+'   Returns:
+'       cog ID+1 of I2C engine on success (= calling cog ID+1, if the bytecode I2C engine is used)
+'       0 on failure
+    if ( lookdown(SCL_PIN: 0..63) and lookdown(SDA_PIN: 0..63) and lookdown(DISP_HT: 2, 4) )
+        if ( status := i2c.init(SCL_PIN, SDA_PIN, I2C_HZ) )
             waitus(core.T_POR)
             _RESET := RST_PIN
-            if (ADDR_BIT)
+            if ( ADDR_BITS )
                 _addr_bits := (1 << 1)
             else
                 _addr_bits := 0
-            if (DISP_LINES == 2)
+            if ( DISP_HT == 2 )
                 preset_2x16()
-            elseif (DISP_LINES == 4)
+            elseif ( DISP_HT == 4 )
                 preset_4x20()
             reset()
             defaults()
-            if (dev_id() == core.DEVID_RESP)
+            if ( dev_id() == core.DEVID_RESP )
                 return
     ' if this point is reached, something above failed
     ' Double check I/O pin assignments, connections, power
     ' Lastly - make sure you have at least one free core/cog
     return FALSE
 
+
 PUB stop()
 ' Turn the display visibility off and stop the I2C cog
     visibility(OFF)
     i2c.deinit()
+
 
 PUB defaults()
 ' Factory default settings - initialize shadow registers
@@ -151,6 +184,7 @@ PUB defaults()
 
     _fadeblink := 0
 
+
 PUB preset_2x16()
 ' Set up for 2x16 displays
     _disp_width := 16
@@ -158,6 +192,7 @@ PUB preset_2x16()
     _disp_xmax := (_disp_width-1)
     _disp_ymax := (_disp_height-1)
     _disp_lines_nw := core.NW_1_2_LINE
+
 
 PUB preset_4x20()
 ' Set up for 4x20 displays
@@ -167,11 +202,13 @@ PUB preset_4x20()
     _disp_ymax := (_disp_height-1)
     _disp_lines_nw := core.NW_3_4_LINE
 
+
 PUB char_attrs(attr)
 ' Set character attributes
 '   Valid values:
 '       CHAR_PROC (2) - process control codes (0 to print literal char)
     _char_attrs := attr
+
 
 PUB char_gen(count)
 ' Select number of pre-defined vs free user-defined character cells
@@ -194,7 +231,8 @@ PUB char_gen(count)
 
     writereg(2, CMDSET_EXTD, core.FUNCT_SEL_B, _char_predef | _char_set)
 
-PUB char_rom(char_set)
+
+PUB char_rom(char_set): s
 ' Select ROM font / character set
 '   Valid values:
 '       0: ROM A
@@ -211,12 +249,13 @@ PUB char_rom(char_set)
         other:
             return _char_set
 
-    writereg(2, CMDSET_EXTD, core.FUNCT_SEL_B,{
-}   _char_predef | _char_set)
+    writereg(2, CMDSET_EXTD, core.FUNCT_SEL_B, _char_predef | _char_set)
+
 
 PUB clear()
 ' Clear display
     writereg(0, CMDSET_FUND, core.CLEAR_DISP, 0)
+
 
 PUB clear_line(line)
 ' Clear specified line
@@ -227,14 +266,16 @@ PUB clear_line(line)
         repeat _disp_width
             char(" ")
 
+
 PUB clk_freq(freq)
 ' Set display internal oscillator frequency, in kHz
 '   Valid values:
 '       454..556 (clamped to range; see table below; POR: 501)
-    _freq := ((0 #> lookdown(freq: 454, 460, 467, 474, 481, 488, 494, 501, 508, 515, 522, 528, {
-}                                  535, 542, 549, 556) <# 15) << core.OSC_FREQ)
+    _freq := ((0 #> lookdown(freq:  454, 460, 467, 474, 481, 488, 494, 501, 508, 515, 522, 528, ...
+                                    535, 542, 549, 556) <# 15) << core.OSC_FREQ)
 
     writereg(1, CMDSET_OLED, core.DISP_CLKDIV_OSC, _freq | _clkdiv)
+
 
 PUB clk_div(divider)
 ' Set clock frequency divider used by the display controller
@@ -244,6 +285,7 @@ PUB clk_div(divider)
 
     writereg(1, CMDSET_OLED, core.DISP_CLKDIV_OSC, _freq | _clkdiv)
 
+
 PUB com_logic_high_lvl(level)
 ' Set COMmon pins high logic level relative to Vcc ((level / 100) * Vcc)
 '   Valid values:
@@ -251,10 +293,12 @@ PUB com_logic_high_lvl(level)
     level := ((0 #> lookdownz(level: 0_65, 0_71, 0_77, 0_83, 1_00) <# 4) << core.VCOMH)
     writereg(1, CMDSET_OLED, core.SET_VCOMH_DESEL, level)
 
+
 PUB contrast(level)
 ' Set display contrast level
 '   Valid values: 0..127 (clamped to range; POR: 127)
     writereg(1, CMDSET_OLED, core.SET_CONTRAST, (0 #> level <# 127))
+
 
 PUB cursor_blink_ena(state)
 ' Enable cursor blinking
@@ -264,6 +308,7 @@ PUB cursor_blink_ena(state)
     _blink_en := state := ((state <> 0) & 1)
     writereg(0, CMDSET_FUND, core.DISP_ONOFF | (_disp_en | _curs_en | _blink_en), 0)
 
+
 PUB cursor_invert_ena(state)
 ' Invert cursor
 '   Valid values:
@@ -271,6 +316,7 @@ PUB cursor_invert_ena(state)
 '       TRUE (non-zero): Inverted cursor
     _curs_invert := state := (((state <> 0) & 1) << 1)
     writereg(1, CMDSET_EXTD, core.EXTD_FUNCSET | (_fnt_wid | _curs_invert | _disp_lines_nw), 0)
+
 
 PUB cursor_mode(type)
 ' Select cursor display mode
@@ -300,6 +346,7 @@ PUB cursor_mode(type)
     writereg(0, CMDSET_FUND, core.DISP_ONOFF | (_disp_en |_curs_en | _blink_en), 0)
     cursor_invert_ena(_curs_invert >> 1)
 
+
 PUB dev_id(): id
 ' Read device ID
 '   Returns: $21 if successful
@@ -310,6 +357,7 @@ PUB dev_id(): id
     i2c.read(i2c.ACK)                           ' dummy read
     id := i2c.read(i2c.NAK)                     ' Second read gets the Part ID
     i2c.stop()
+
 
 PUB disp_blink_tm(delay)
 ' Set time interval for display blink/gradual fade in/out, in number of frames
@@ -323,6 +371,7 @@ PUB disp_blink_tm(delay)
 
     writereg(1, CMDSET_OLED, core.FADE_BLINK, _fadeblink)
 
+
 PUB disp_fade_tm(delay)
 ' Set time interval for display fade out, in number of frames
 '   Valid values:
@@ -335,6 +384,7 @@ PUB disp_fade_tm(delay)
         _fadeblink := core.FADE_BLINK_DIS
 
     writereg(1, CMDSET_OLED, core.FADE_BLINK, _fadeblink)
+
 
 PUB disp_lines(lines)
 ' Set number of display lines
@@ -359,6 +409,7 @@ PUB disp_lines(lines)
     writereg(1, CMDSET_FUND, core.FUNCT_SET_0 | (_disp_lines_n | _dblht_en), 0)
     writereg(1, CMDSET_EXTD, core.EXTD_FUNCSET | (_fnt_wid | _curs_invert | _disp_lines_nw), 0)
 
+
 PUB disp_rdy(): flag
 ' Flag indicating display is ready
 '   Returns: TRUE (-1) or FALSE (0)
@@ -370,6 +421,7 @@ PUB disp_rdy(): flag
 
     return (((flag >> 7) & 1) <> 1)
 
+
 PUB disp_shift(direction)
 ' Shift the display left or right by one character cell's width
 '   Valid values:
@@ -377,6 +429,7 @@ PUB disp_shift(direction)
 '       RIGHT (3)
 '   Any other value is ignored
     writereg(0, CMDSET_FUND, core.CURS_DISP_SHIFT | (LEFT #> direction <# RIGHT), 0)
+
 
 PUB dbl_height(mode)
 ' Set double-height font style mode
@@ -394,8 +447,10 @@ PUB dbl_height(mode)
         0:
             _dblht_mode := 0
             _dblht_en := 0
-            writereg(1, CMDSET_EXTD, core.FUNCT_SET_0 | {
-}           (core.DISP_LINES_2_4 | core.DBLHT_FNT_DIS), 0)
+            writereg(   1, ...
+                        CMDSET_EXTD, ...
+                        core.FUNCT_SET_0 | (core.DISP_LINES_2_4 | core.DBLHT_FNT_DIS), ...
+                        0)
             return
         1:
             _dblht_mode := core.DBLHT_BOTTOM
@@ -412,11 +467,13 @@ PUB dbl_height(mode)
 
     writereg(1, CMDSET_EXTD, core.DBLHT | _dblht_mode, 0)
 
+
 PUB fnt_width(sz)
 ' Set Font width, in pixels
 '   Valid values: 5 or 6 (clamped to range; POR: 5)
     _fnt_wid := sz := ((0 #> (sz-5) <# 1) << core.FNTWIDTH)
     writereg(1, CMDSET_EXTD, core.EXTD_FUNCSET | (_fnt_wid | _curs_invert | _disp_lines_nw), 0)
+
 
 PUB get_pos(): addr
 ' Get current pos in display RAM
@@ -426,6 +483,7 @@ PUB get_pos(): addr
     i2c.write(SLAVE_RD | _addr_bits)
     addr := i2c.read(TRUE)
     i2c.stop()
+
 
 PUB gpio_state(state)
 ' Set state of GPIO pin
@@ -437,10 +495,12 @@ PUB gpio_state(state)
     _gpio_state := state := (core.GPIO_HIZ_INP_DIS #> state <# core.GPIO_OUT_HIGH)
     writereg(1, CMDSET_OLED, core.FUNCT_SEL_C, (_ext_vsl | _gpio_state))
 
+
 PUB home()
 ' Returns cursor to home pos (0, 0)
 '   NOTE: Doesn't clear the display
     writereg(0, CMDSET_FUND, core.HOME_DISP, 0)
+
 
 PUB invert_colors(state)
 ' Invert display colors
@@ -449,17 +509,20 @@ PUB invert_colors(state)
     state := (((state <> 0) & 1) + 1)
     visibility(state)
 
+
 PUB mirror_h(state)
 ' Mirror display, horizontally
 '   Valid values: TRUE (non-zero), FALSE (0)
     _mirror_h := ((state <> 0) & 1)
     writereg(1, CMDSET_EXTD, core.ENTRY_MODE_SET | (_mirror_h | _mirror_v), 0)
 
+
 PUB mirror_v(state)
 ' Mirror display, vertically
 '   Valid values: TRUE (non-zero), FALSE (0)
     _mirror_v := ((( (state <> 0) & 1) ^ 1) << 1)
     writereg(1, CMDSET_EXTD, core.ENTRY_MODE_SET | (_mirror_h | _mirror_v), 0)
+
 
 PUB pin_cfg(cfg)
 ' Change mapping between display data column address and segment driver.
@@ -470,17 +533,20 @@ PUB pin_cfg(cfg)
     _seg_pincfg := (0 #> cfg <# 1)
     writereg(1, CMDSET_OLED, core.SET_SEG_PINS, (_seg_remap | _seg_pincfg))
 
+
 PUB phase1_period(clocks)
 ' Set length of phase 1 of segment waveform of the driver
 ' Valid values: 0..32 clocks
     _phs1_per := (((2 #> clocks <# 32) >> 1) - 1)
     writereg(1, CMDSET_OLED, core.SET_PHASE_LEN, (_phs2_per | _phs1_per))
 
+
 PUB phase2period(clocks)
 ' Set length of phase 2 of segment waveform of the driver
 '   Valid values: 1..15 clocks (POR: 7)
     _phs2_per := ((1 #> clocks <# 15) << 4)
     writereg(1, CMDSET_OLED, core.SET_PHASE_LEN, (_phs2_per | _phs1_per))
+
 
 PUB position = pos_xy
 PUB pos_xy(column, row) | offset
@@ -496,6 +562,7 @@ PUB pos_xy(column, row) | offset
             return
 
     writereg(0, CMDSET_FUND, core.SET_DDRAM_ADDR | offset, 0)
+
 
 PUB tx = putchar
 PUB char = putchar
@@ -551,12 +618,14 @@ PUB putchar(ch) | col, row, pos
     { displayable character }
     wr_data(ch)
 
+
 PUB reset()
 ' Send reset signal to display controller
     pinl(_RESET)
     waitus(core.TRES)
     pinh(_RESET)
     waitms(1)
+
 
 PUB seg_voltage_ref(ref)
 ' Select segment voltage reference
@@ -565,6 +634,7 @@ PUB seg_voltage_ref(ref)
 '       EXT (1): External VSL
     _ext_vsl := (INT #> ref <# EXT) << core.VSL
     writereg(1, CMDSET_OLED, core.FUNCT_SEL_C, (_ext_vsl | _gpio_state))
+
 
 PUB supply_voltage(v)
 ' Set supply voltage (enable/disable internal regulator)
@@ -578,6 +648,7 @@ PUB supply_voltage(v)
 
     writereg(2, CMDSET_EXTD, core.FUNCT_SEL_A, v)
 
+
 PUB text_dir(tdir)
 ' Change mapping between display data column address and segment driver.
 '   Valid values:
@@ -586,6 +657,7 @@ PUB text_dir(tdir)
 '   NOTE: Only affects subsequent data input. Data already displayed/in DDRAM will be unchanged.
     _seg_remap := ((0 #> tdir <# 1) << core.SEG_LR_REMAP)
     writereg(1, CMDSET_OLED, core.SET_SEG_PINS, (_seg_remap | _seg_pincfg))
+
 
 PUB visibility(mode)
 ' Set display visibility
@@ -610,6 +682,7 @@ PUB visibility(mode)
     writereg(1, CMDSET_FUND, core.DISP_ONOFF | (_disp_en |_curs_en | _blink_en), 0)
     writereg(1, CMDSET_EXTD, core.FUNCT_SET_1 | (_cgram_blink | _disp_invert), 0)
 
+
 PRI wr_data(dbyte) | cmd_pkt
 ' Write bytes with the DATA control byte set
     cmd_pkt.byte[0] := (SLAVE_WR | _addr_bits)
@@ -619,6 +692,7 @@ PRI wr_data(dbyte) | cmd_pkt
     i2c.start()
     i2c.wrblock_lsbf(@cmd_pkt, 3)
     i2c.stop()
+
 
 PRI writereg(nr_bytes, cmd_set, cmd, val) | cmd_pkt[4]
 ' Write cmd with param 'val' from command set
@@ -685,9 +759,10 @@ PRI writereg(nr_bytes, cmd_set, cmd, val) | cmd_pkt[4]
     i2c.wrblock_lsbf(@cmd_pkt, nr_bytes)
     i2c.stop()
 
+
 DAT
 {
-Copyright 2022 Jesse Burt
+Copyright 2024 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,

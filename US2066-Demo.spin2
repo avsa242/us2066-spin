@@ -1,44 +1,37 @@
 {
-    --------------------------------------------
-    Filename: OLED-US2066-Demo.spin2
-    Description: Demo of the US2066 driver (P2 version)
-    Author: Jesse Burt
-    Copyright (c) 2022
-    Created Dec 30, 2017
-    Updated Dec 3, 2022
-    See end of file for terms of use.
-    --------------------------------------------
+----------------------------------------------------------------------------------------------------
+    Filename:       OLED-US2066-Demo.spin2
+    Description:    Demo of the US2066 driver
+    Author:         Jesse Burt
+    Started:        Dec 30, 2017
+    Updated:        Oct 10, 2024
+    Copyright (c) 2024 - See end of file for terms of use.
+----------------------------------------------------------------------------------------------------
 }
+
 CON
 
-    _clkfreq    = cfg._clkfreq_def
-    _xtlfreq    = cfg._xtlfreq
+    _clkfreq    = 180_000_000
+    _xtlfreq    = 20_000_000
 
 ' -- User modifiable constants
-    LED         = cfg.LED1
-    SER_BAUD    = 2_000_000
-
 ' uncomment one of the below pairs, depending on your display size
-'    WIDTH       = 20
-'    HEIGHT      = 4
-    WIDTH       = 16
-    HEIGHT      = 2
-
-    SCL_PIN     = 0
-    SDA_PIN     = 1
-    RESET_PIN   = 2                             ' optional (-1 to disable)
-    I2C_FREQ    = 400_000
-    ADDR_BITS   = 0                             ' 0, 1
+    WIDTH       = 20
+    HEIGHT      = 4
+'    WIDTH       = 16
+'    HEIGHT      = 2
 ' --
 
     DEMO_DELAY  = 2_000                         ' seconds between demos
     MODE_DELAY  = 1_000                         ' seconds between sub-demos
 
+
 OBJ
 
-    cfg : "boardcfg.p2eval"
-    oled: "display.oled-alpha.us2066"
-    ser : "com.serial.terminal.ansi"
+    oled:   "display.oled-alpha.us2066" | SCL=0, SDA=1, RST=2, I2C_FREQ=100_000, I2C_ADDR=0, ...
+                                            HEIGHT=HEIGHT
+    ser:    "com.serial.terminal.ansi" | SER_BAUD=2_000_000
+
 
 PUB main()
 
@@ -83,6 +76,7 @@ PUB main()
     oled.stop()
     repeat
 
+
 PUB contrast_demo() | i
 
     oled.pos_xy(0, 0)
@@ -106,6 +100,7 @@ PUB contrast_demo() | i
 
     oled.dbl_height(0)
 
+
 PUB count_demo() | i
 
     case HEIGHT
@@ -128,6 +123,7 @@ PUB count_demo() | i
             repeat i from 0 to 3000
                 oled.pos_xy(0, 3)
                 oled.printf(@"i = %d", i)
+
 
 PUB cursor_demo() | delay, dbl_mode
 
@@ -192,6 +188,7 @@ PUB cursor_demo() | delay, dbl_mode
     oled.dbl_height(0)
     oled.cursor_mode(0)
 
+
 PUB dbl_height_demo() | mode, line
 
     case HEIGHT
@@ -217,6 +214,7 @@ PUB dbl_height_demo() | mode, line
                     oled.str(@"Double-height")
                 waitms(MODE_DELAY)
 
+
 PUB fnt_width_demo() | px, dbl_mode
 
     oled.clear()
@@ -233,6 +231,7 @@ PUB fnt_width_demo() | px, dbl_mode
     oled.fnt_width(5)
     oled.dbl_height(0)
 
+
 PUB greet_demo()
 
     case HEIGHT
@@ -246,6 +245,7 @@ PUB greet_demo()
             oled.str(@w20l2)
             oled.str(@w20l3)
             oled.str(@w20l4)
+
 
 PUB invert_demo() | i
 
@@ -262,6 +262,7 @@ PUB invert_demo() | i
         oled.pos_xy(WIDTH-8, HEIGHT-1)
         oled.str(@"NORMAL  ")
         waitms(MODE_DELAY)
+
 
 PUB mirror_demo() | row, col
 
@@ -307,6 +308,7 @@ PUB mirror_demo() | row, col
     oled.mirror_h(FALSE)
     oled.mirror_v(FALSE)
 
+
 PUB position_demo() | x, y
 
     repeat y from 0 to HEIGHT-1
@@ -318,21 +320,22 @@ PUB position_demo() | x, y
             oled.char("-")
             waitms(25)
 
+
 PRI strdelay(stringptr, delay)
 ' Display zero-terminated string with inter-character delay, in ms
     repeat strsize(stringptr)
         oled.char(byte[stringptr++])
         waitms(delay)
 
+
 PUB setup()
 
-    ser.start(SER_BAUD)
-    waitms(30)
+    ser.start()
+
     ser.clear()
     ser.strln(@"Serial terminal started")
 
-    ' use all custom settings
-    if oled.startx(SCL_PIN, SDA_PIN, RESET_PIN, I2C_FREQ, ADDR_BITS, HEIGHT)
+    if ( oled.start() )
         ser.strln(@"US2066 driver started")
     else
         ser.strln(@"US2066 driver failed to start - halting")

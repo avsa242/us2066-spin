@@ -1,13 +1,12 @@
 {
-    --------------------------------------------
-    Filename: core.con.us2066.spin
-    Author: Jesse Burt
-    Description: US2066-specific constants
-    Copyright (c) 2021
-    Created Dec 30, 2017
-    Updated May 18, 2021
-    See end of file for terms of use.
-    --------------------------------------------
+----------------------------------------------------------------------------------------------------
+    Filename:       core.con.us2066.spin
+    Description:    US2066-specific constants
+    Author:         Jesse Burt
+    Started:        Dec 30, 2017
+    Updated:        Oct 10, 2024
+    Copyright (c) 2024 - See end of file for terms of use.
+----------------------------------------------------------------------------------------------------
 }
 
 CON
@@ -172,12 +171,14 @@ CON
         FADE_OUT_ENA    = %10 << 4
         BLINK_ENA       = %11 << 4
 
-PUB null{}
+
+PUB null()
 ' This is not a top-level object
+
 
 DAT
 {
-Copyright 2022 Jesse Burt
+Copyright 2024 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
