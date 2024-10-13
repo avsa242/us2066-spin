@@ -79,7 +79,7 @@ VAR
     byte _disp_en, _curs_en, _blink_en
     byte _disp_lines_n, _dblht_en
     byte _funct_sel_c
-    byte _phs1_per, _phs2_per
+    byte _set_phase_len
     byte _vcomh_des_lvl
     byte _cgram_blink, _disp_invert
     byte _fadeblink
@@ -162,8 +162,7 @@ PUB defaults()
 
     _funct_sel_c := (INT << core.VSL) | GPIO_OUT_LOW
 
-    _phs1_per := 8
-    _phs2_per := 7
+    _set_phase_len := (7 << core.PHASE2) | 8
 
     _vcomh_des_lvl := 2
 
@@ -528,15 +527,15 @@ PUB pin_cfg(c)
 PUB phase1_period(clocks)
 ' Set length of phase 1 of segment waveform of the driver
 ' Valid values: 0..32 clocks
-    _phs1_per := (((2 #> clocks <# 32) >> 1) - 1)
-    writereg(1, CMDSET_OLED, core.SET_PHASE_LEN, (_phs2_per | _phs1_per))
+    _set_phase_len := (_set_phase_len & core.PHASE1_MASK) | ( ( (2 #> clocks <# 32) >> 1) - 1)
+    writereg(1, CMDSET_OLED, core.SET_PHASE_LEN, _set_phase_len)
 
 
-PUB phase2period(clocks)
+PUB phase2_period(clocks)
 ' Set length of phase 2 of segment waveform of the driver
 '   Valid values: 1..15 clocks (POR: 7)
-    _phs2_per := ((1 #> clocks <# 15) << 4)
-    writereg(1, CMDSET_OLED, core.SET_PHASE_LEN, (_phs2_per | _phs1_per))
+    _set_phase_len := (_set_phase_len & core.PHASE2_MASK) | ( (1 #> clocks <# 15) << core.PHASE2)
+    writereg(1, CMDSET_OLED, core.SET_PHASE_LEN, _set_phase_len)
 
 
 PUB position = pos_xy

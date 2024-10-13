@@ -154,7 +154,14 @@ CON
         OSC_FREQ_MASK   = (OSC_FREQ_BITS << OSC_FREQ) ^ DISP_CLKDIV_OSC_MASK
         CLK_DIV_MASK    = (CLK_DIV_BITS ^ DISP_CLKDIV_OSC_MASK)
 
-    SET_PHASE_LEN       = $D9      ' $D9 Segment waveform length (unit=DCLKs). Phase 2 (MSBs, POR=%0111) range %0001..%1111, Phase 1 (LSBs, POR=%1000) range %0010..%1111
+    SET_PHASE_LEN       = $D9
+    SET_PHASE_LEN_MASK  = $ff
+        PHASE2          = 4
+        PHASE1          = 0
+        PHASE2_BITS     = %1111
+        PHASE1_BITS     = %1111
+        PHASE2_MASK     = (PHASE2_BITS << PHASE2) ^ SET_PHASE_LEN_MASK
+        PHASE1_MASK     = PHASE1_BITS ^ SET_PHASE_LEN_MASK
 
     SET_SEG_PINS            = $DA      ' $DA Set SEG pins hardware configuration
     SET_SEG_PINS_MASK       = $30
