@@ -174,13 +174,12 @@ CON
         VCOMH_MASK      = (VCOMH_BITS << VCOMH) ^ SET_VCOMH_DESEL_MASK
 
     FUNCT_SEL_C         = $DC      ' $DC Set VSL/GPIO
+    FUNCT_SEL_C_MASK    = $83
         VSL             = 7
-        VSL_INT         = %0 << VSL
-        VSL_EXT         = %1 << VSL
-        GPIO_HIZ_INP_DIS= %00
-        GPIO_HIZ_INP_ENA= %01
-        GPIO_OUT_LOW    = %10
-        GPIO_OUT_HIGH   = %11
+        GPIO            = 0
+        GPIO_BITS       = %11
+        VSL_MASK        = (1 << VSL) ^ FUNCT_SEL_C_MASK
+        GPIO_MASK       = GPIO_BITS ^ FUNCT_SEL_C_MASK
 
     FADE_BLINK          = $23      '$23 Set fade out and blinking.
         FADE_BLINK_DIS  = %00 << 4

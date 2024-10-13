@@ -56,10 +56,6 @@ CON
     ON              = 1
     INVERT          = 2
 
-' SEG Voltage reference/enable or disable internal regulator
-    INT             = 0
-    EXT             = 1
-
 ' Flag top-level objects can use to tell this is the PASM version
     PASM            = TRUE
 
@@ -76,12 +72,13 @@ VAR
     { shadow registers }
     byte _entry_mode_set
     byte _funct_sel_b
-    byte _fnt_wid, _curs_invert, _disp_lines_nw
     byte _disp_clkdiv_freq
+    byte _set_seg_pins
+
+    byte _fnt_wid, _curs_invert, _disp_lines_nw
     byte _disp_en, _curs_en, _blink_en
     byte _disp_lines_n, _dblht_en
-    byte _set_seg_pins
-    byte _ext_vsl, _gpio_state
+    byte _funct_sel_c
     byte _phs1_per, _phs2_per
     byte _vcomh_des_lvl
     byte _cgram_blink, _disp_invert
@@ -164,8 +161,7 @@ PUB defaults()
 
     _set_seg_pins := core.SEG_LR_REMAP_DIS | core.ALT_SEGPINCFG
 
-    _ext_vsl := core.VSL_INT
-    _gpio_state := core.GPIO_OUT_LOW
+    _funct_sel_c := (INT << core.VSL) | GPIO_OUT_LOW
 
     _phs1_per := 8
     _phs2_per := 7
@@ -474,15 +470,22 @@ PUB get_pos(): addr
     i2c.stop()
 
 
-PUB gpio_state(state)
+CON
+
+    GPIO_HIZ_INP_DIS= 0
+    GPIO_HIZ_INP_ENA= 1
+    GPIO_OUT_LOW    = 2                         ' POR default
+    GPIO_OUT_HIGH   = 3
+
+PUB gpio_state(s)
 ' Set state of GPIO pin
 '   Valid values:
 '       0: GPIO pin HiZ, input disabled (always read as low)
 '       1: GPIO pin HiZ, input enabled
 '       2: GPIO pin output, low (POR)
 '       3: GPIO pin output, high
-    _gpio_state := state := (core.GPIO_HIZ_INP_DIS #> state <# core.GPIO_OUT_HIGH)
-    writereg(1, CMDSET_OLED, core.FUNCT_SEL_C, (_ext_vsl | _gpio_state))
+    _funct_sel_c := (_funct_sel_c & core.GPIO_MASK) | (0 #> s <# 3)
+    writereg(1, CMDSET_OLED, core.FUNCT_SEL_C, s)
 
 
 PUB home()
@@ -617,13 +620,18 @@ PUB reset()
     time.msleep(1)
 
 
-PUB seg_voltage_ref(ref)
+CON
+' SEG Voltage reference/enable or disable internal regulator
+    INT = 0
+    EXT = 1
+
+PUB seg_voltage_ref(r)
 ' Select segment voltage reference
 '   Valid values:
 '       INT (0): Internal VSL (POR)
 '       EXT (1): External VSL
-    _ext_vsl := (INT #> ref <# EXT) << core.VSL
-    writereg(1, CMDSET_OLED, core.FUNCT_SEL_C, (_ext_vsl | _gpio_state))
+    _funct_sel_c := (_funct_sel_c & core.VSL_MASK) | ( (INT #> r <# EXT) << core.VSL )
+    writereg(1, CMDSET_OLED, core.FUNCT_SEL_C, _funct_sel_c)
 
 
 PUB supply_voltage(v)
