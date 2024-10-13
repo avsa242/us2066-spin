@@ -73,13 +73,13 @@ VAR
     byte _entry_mode_set
     byte _funct_sel_b
     byte _funct_sel_c
+    byte _funct_set_1
     byte _disp_clkdiv_freq
     byte _set_seg_pins
     byte _set_phase_len
     byte _fnt_wid, _curs_invert, _disp_lines_nw
     byte _disp_en, _curs_en, _blink_en
     byte _disp_lines_n, _dblht_en
-    byte _funct_set_1
     byte _fadeblink
     byte _disp_width, _disp_height, _disp_xmax, _disp_ymax
 
@@ -345,29 +345,37 @@ PUB dev_id(): id
     i2c.stop()
 
 
-PUB disp_blink_tm(delay)
+CON
+
+    FADE_BLINK_DIS  = %00 << core.FB_MODE
+    FADE_OUT_ENA    = %10 << core.FB_MODE
+    BLINK_ENA       = %11 << core.FB_MODE
+
+PUB disp_blink_tm(t)
 ' Set time interval for display blink/gradual fade in/out, in number of frames
 '   Valid values:
-'       0..128 (rounded to nearest multiple of 8; clamped to range; POR: 0)
+'       0, 8..128 (rounded to nearest multiple of 8; clamped to range; default is 0)
 '   NOTE: 0 effectively disables the setting
-    if (delay)
-        _fadeblink := (core.BLINK_ENA | (((8 #> delay <# 128) / 8) - 1))
+    _fadeblink := (_fadeblink & core.FB_TIMEINT_MASK)
+    if ( t )
+        _fadeblink := (_fadeblink | BLINK_ENA | ( ( (8 #> t <# 128) / 8) - 1) )
     else
-        _fadeblink := core.FADE_BLINK_DIS
+        _fadeblink &= core.FB_MODE_MASK         ' turn off blinking/fading
 
     writereg(1, CMDSET_OLED, core.FADE_BLINK, _fadeblink)
 
 
-PUB disp_fade_tm(delay)
+PUB disp_fade_tm(t)
 ' Set time interval for display fade out, in number of frames
 '   Valid values:
-'       0..128 (rounded to nearest multiple of 8; clamped to range; POR: 0)
+'       0, 8..128 (rounded to nearest multiple of 8; clamped to range; default is 0)
 '   NOTE: The fade will occur only once
 '   NOTE: 0 effectively disables the function
-    if (delay)
-        _fadeblink := (core.FADE_OUT_ENA | (((8 #> delay <# 128) / 8) - 1))
+    _fadeblink := (_fadeblink & core.FB_TIMEINT_MASK)
+    if ( t )
+        _fadeblink := (_fadeblink | FADE_OUT_ENA | ( ( (8 #> t <# 128) / 8) - 1) )
     else
-        _fadeblink := core.FADE_BLINK_DIS
+        _fadeblink &= core.FB_MODE_MASK
 
     writereg(1, CMDSET_OLED, core.FADE_BLINK, _fadeblink)
 

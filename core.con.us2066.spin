@@ -196,9 +196,13 @@ CON
         GPIO_MASK       = GPIO_BITS ^ FUNCT_SEL_C_MASK
 
     FADE_BLINK          = $23      '$23 Set fade out and blinking.
-        FADE_BLINK_DIS  = %00 << 4
-        FADE_OUT_ENA    = %10 << 4
-        BLINK_ENA       = %11 << 4
+    FADE_BLINK_MASK     = $3f
+        FB_MODE         = 4
+        FB_TIMEINT      = 0
+        FB_MODE_BITS    = %11
+        FB_TIMEINT_BITS = %1111
+        FB_MODE_MASK    = (FB_MODE_BITS << FB_MODE) ^ FADE_BLINK_MASK
+        FB_TIMEINT_MASK = (FB_TIMEINT_BITS << FB_TIMEINT) ^ FADE_BLINK_MASK
 
 
 PUB null()
