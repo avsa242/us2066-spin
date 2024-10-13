@@ -75,7 +75,7 @@ VAR
 
     { shadow registers }
     byte _entry_mode_set
-    byte _char_predef, _char_set
+    byte _funct_sel_b
     byte _fnt_wid, _curs_invert, _disp_lines_nw
     byte _freq, _clkdiv
     byte _disp_en, _curs_en, _blink_en
@@ -155,8 +155,7 @@ PUB defaults()
     _curs_en := 0
     _blink_en := 0
 
-    _char_predef := core.CG_ROM_RAM_240_8
-    _char_set := core.CHAR_ROM_A
+    _funct_sel_b := core.CG_ROM240_RAM8 | core.CHAR_ROM_A
 
     _freq := %0111
     _clkdiv := %0000
@@ -205,46 +204,48 @@ PUB char_attrs(attr)
     _char_attrs := attr
 
 
-PUB char_gen(count)
+PUB char_gen(pd)
 ' Select number of pre-defined vs free user-defined character cells
 '   Valid values:
 '       240 (leaves 8 available user-defined characters)
 '       248 (leaves 8 available user-defined characters)
 '       250 (leaves 6 available user-defined characters)
 '       256 (leaves 0 available user-defined characters)
-    case count
+    case pd
         240:
-            _char_predef := core.CG_ROM_RAM_240_8
+            pd := core.CG_ROM240_RAM8
         248:
-            _char_predef := core.CG_ROM_RAM_248_8
+            pd := core.CG_ROM248_RAM8
         250:
-            _char_predef := core.CG_ROM_RAM_250_6
+            pd := core.CG_ROM250_RAM6
         256:
-            _char_predef := core.CG_ROM_RAM_256_0
+            pd := core.CG_ROM256_RAM0
         other:
             return
 
-    writereg(2, CMDSET_EXTD, core.FUNCT_SEL_B, _char_predef | _char_set)
+    _funct_sel_b := (_funct_sel_b & core.OPR_MASK) | pd
+    writereg(2, CMDSET_EXTD, core.FUNCT_SEL_B, _funct_sel_b)
 
+CON
 
-PUB char_rom(char_set): s
+    ROM_A   = 0
+    ROM_B   = 1
+    ROM_C   = 2
+
+PUB char_rom(rf): s
 ' Select ROM font / character set
 '   Valid values:
-'       0: ROM A
-'       1: ROM B
-'       2: ROM C
-'   Any other value returns the current setting
-    case char_set
-        0:
-            _char_set := core.CHAR_ROM_A
-        1:
-            _char_set := core.CHAR_ROM_B
-        2:
-            _char_set := core.CHAR_ROM_C
+'       ROM_A (0)
+'       ROM_B (1)
+'       ROM_C (2)
+    case rf
+        ROM_A..ROM_C:
+            rf <<= core.ROM
         other:
-            return _char_set
+            return
 
-    writereg(2, CMDSET_EXTD, core.FUNCT_SEL_B, _char_predef | _char_set)
+    _funct_sel_b := (_funct_sel_b & core.ROM_MASK) | rf
+    writereg(2, CMDSET_EXTD, core.FUNCT_SEL_B, _funct_sel_b)
 
 
 PUB clear()

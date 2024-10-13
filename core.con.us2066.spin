@@ -123,13 +123,20 @@ CON
         INT_REG_EN      = $5C
 
     FUNCT_SEL_B         = $72      ' $72 %xxxx_ROM1_ROM0_OPR1_OPR0
-        CHAR_ROM_A      = %00 << 2
-        CHAR_ROM_B      = %01 << 2
-        CHAR_ROM_C      = %10 << 2
-        CG_ROM_RAM_240_8= %00
-        CG_ROM_RAM_248_8= %01
-        CG_ROM_RAM_250_6= %10
-        CG_ROM_RAM_256_0= %11
+    FUNCT_SEL_B_MASK    = $0f
+        ROM             = 2
+        ROM_BITS        = %11
+        ROM_MASK        = (ROM_BITS << ROM) ^ FUNCT_SEL_B_MASK
+        CHAR_ROM_A      = %00 << ROM
+        CHAR_ROM_B      = %01 << ROM
+        CHAR_ROM_C      = %10 << ROM
+        OPR             = 0
+        OPR_BITS        = %11
+        OPR_MASK        = OPR_BITS ^ FUNCT_SEL_B_MASK
+        CG_ROM240_RAM8  = %00
+        CG_ROM248_RAM8  = %01
+        CG_ROM250_RAM6  = %10
+        CG_ROM256_RAM0  = %11
 
 '-OLED COMMAND SET-----
     OLED_CHR            = $78      ' OLED Characterization
