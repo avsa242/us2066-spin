@@ -34,10 +34,15 @@ CON
 
 'RE bit set 0, SD bit set 0
     ENTRY_MODE_SET      = $04      '$04 Entry Mode Set
-    LTR                 = %1 << 1
-    RTL                 = %0 << 1
-    SHIFT               = %1
-    NOSHIFT             = %0       '(POR)
+    ENTRY_MODE_SET_MASK = $03
+        ID              = 1
+        ID_MASK         = (1 << ID) ^ ENTRY_MODE_SET_MASK
+        S               = 0
+        S_MASK          = 1 ^ ENTRY_MODE_SET_MASK
+        LTR             = 1 << 1
+        RTL             = 0 << 1
+        SHIFT           = 1
+        NOSHIFT         = 0       '(POR)
 
 'RE bit set 1, SD bit set 0
     COM31_0             = %0 << 1

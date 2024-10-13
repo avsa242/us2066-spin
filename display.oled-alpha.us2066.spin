@@ -74,7 +74,7 @@ VAR
     byte _addr_bits
 
     { shadow registers }
-    byte _mirror_h, _mirror_v
+    byte _entry_mode_set
     byte _char_predef, _char_set
     byte _fnt_wid, _curs_invert, _disp_lines_nw
     byte _freq, _clkdiv
@@ -162,8 +162,7 @@ PUB defaults()
     _freq := %0111
     _clkdiv := %0000
 
-    _mirror_h := core.SEG0_99
-    _mirror_v := core.COM0_31
+    _entry_mode_set := core.SEG0_99 | core.COM0_31
 
     _seg_remap := core.SEG_LR_REMAP_DIS
     _seg_pincfg := core.ALT_SEGPINCFG
@@ -503,15 +502,15 @@ PUB invert_colors(state)
 PUB mirror_h(state)
 ' Mirror display, horizontally
 '   Valid values: TRUE (non-zero), FALSE (0)
-    _mirror_h := ((state <> 0) & 1)
-    writereg(1, CMDSET_EXTD, core.ENTRY_MODE_SET | (_mirror_h | _mirror_v), 0)
+    _entry_mode_set := (_entry_mode_set & core.S_MASK) | ((state <> 0) & 1)
+    writereg(1, CMDSET_EXTD, core.ENTRY_MODE_SET | _entry_mode_set, 0)
 
 
 PUB mirror_v(state)
 ' Mirror display, vertically
 '   Valid values: TRUE (non-zero), FALSE (0)
-    _mirror_v := ((( (state <> 0) & 1) ^ 1) << 1)
-    writereg(1, CMDSET_EXTD, core.ENTRY_MODE_SET | (_mirror_h | _mirror_v), 0)
+    _entry_mode_set := (_entry_mode_set & core.ID_MASK) | ((( (state <> 0) & 1) ^ 1) << 1)
+    writereg(1, CMDSET_EXTD, core.ENTRY_MODE_SET | _entry_mode_set, 0)
 
 
 PUB pin_cfg(cfg)
