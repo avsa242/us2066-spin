@@ -77,7 +77,7 @@ VAR
     byte _entry_mode_set
     byte _funct_sel_b
     byte _fnt_wid, _curs_invert, _disp_lines_nw
-    byte _freq, _clkdiv
+    byte _disp_clkdiv_freq
     byte _disp_en, _curs_en, _blink_en
     byte _disp_lines_n, _dblht_en
     byte _seg_remap, _seg_pincfg
@@ -157,8 +157,7 @@ PUB defaults()
 
     _funct_sel_b := core.CG_ROM240_RAM8 | core.CHAR_ROM_A
 
-    _freq := %0111
-    _clkdiv := %0000
+    _disp_clkdiv_freq := (%0111 << core.OSC_FREQ) | %0000
 
     _entry_mode_set := core.SEG0_99 | core.COM0_31
 
@@ -263,23 +262,24 @@ PUB clear_line(line)
             char(" ")
 
 
-PUB clk_freq(freq)
+PUB clk_freq(f)
 ' Set display internal oscillator frequency, in kHz
 '   Valid values:
 '       454..556 (clamped to range; see table below; POR: 501)
-    _freq := ((0 #> lookdown(freq:  454, 460, 467, 474, 481, 488, 494, 501, 508, 515, 522, 528, ...
-                                    535, 542, 549, 556) <# 15) << core.OSC_FREQ)
+    f := ((0 #> lookdown(freq:  454, 460, 467, 474, 481, 488, 494, 501, 508, 515, 522, 528, ...
+                                535, 542, 549, 556) <# 15) << core.OSC_FREQ)
 
-    writereg(1, CMDSET_OLED, core.DISP_CLKDIV_OSC, _freq | _clkdiv)
+    _disp_clkdiv_freq := (_disp_clkdiv_freq & core.OSC_FREQ_MASK) | f
+    writereg(1, CMDSET_OLED, core.DISP_CLKDIV_OSC, _disp_clkdiv_freq)
 
 
-PUB clk_div(divider)
+PUB clk_div(d)
 ' Set clock frequency divider used by the display controller
 '   Valid values: 1..16 (clamped to range; POR: 1)
-    divider := ((1 #> divider <# 16) - 1)
-    _clkdiv := divider
+    d := ( (1 #> d <# 16) - 1)
 
-    writereg(1, CMDSET_OLED, core.DISP_CLKDIV_OSC, _freq | _clkdiv)
+    _disp_clkdiv_freq := (_disp_clkdiv_freq & core.CLK_DIV_MASK) | d
+    writereg(1, CMDSET_OLED, core.DISP_CLKDIV_OSC, _disp_clkdiv_freq)
 
 
 PUB com_logic_high_lvl(level)

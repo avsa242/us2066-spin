@@ -29,7 +29,7 @@ CON
 OBJ
 
     time:   "time"
-    oled:   "display.oled-alpha.us2066" | SCL=28, SDA=29, RST=27, I2C_FREQ=100_000, I2C_ADDR=0, ...
+    oled:   "display.oled-alpha.us2066" | SCL=28, SDA=29, RST=24, I2C_FREQ=400_000, I2C_ADDR=0, ...
                                             HEIGHT=HEIGHT
     ser:    "com.serial.terminal.ansi" | SER_BAUD=115_200
 
