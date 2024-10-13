@@ -82,10 +82,8 @@ VAR
     byte _disp_lines_n, _dblht_en
     byte _seg_remap, _seg_pincfg
     byte _ext_vsl, _gpio_state
-    byte _contrast
     byte _phs1_per, _phs2_per
     byte _vcomh_des_lvl
-    byte _dblht_mode
     byte _cgram_blink, _disp_invert
     byte _fadeblink
     byte _disp_width, _disp_height, _disp_xmax, _disp_ymax
@@ -172,8 +170,6 @@ PUB defaults()
 
     _ext_vsl := core.VSL_INT
     _gpio_state := core.GPIO_OUT_LOW
-
-    _contrast := 127
 
     _phs1_per := 8
     _phs2_per := 7
@@ -446,27 +442,20 @@ PUB dbl_height(mode)
 '   NOTE: Takes effect immediately - will affect current screen contents
     case mode
         0:
-            _dblht_mode := 0
             _dblht_en := 0
             writereg(   1, ...
                         CMDSET_EXTD, ...
                         core.FUNCT_SET_0 | (core.DISP_LINES_2_4 | core.DBLHT_FNT_DIS), ...
                         0)
             return
-        1:
-            _dblht_mode := core.DBLHT_BOTTOM
-        2:
-            _dblht_mode := core.DBLHT_MIDDLE
-        3:
-            _dblht_mode := core.DBLHT_BOTH
-        4:
-            _dblht_mode := core.DBLHT_TOP
+        1..4:
+            mode := (mode-1) << 2
         other:
             return
 
     _dblht_en := core.DBLHT_FNT_EN
 
-    writereg(1, CMDSET_EXTD, core.DBLHT | _dblht_mode, 0)
+    writereg(1, CMDSET_EXTD, core.DBLHT | mode, 0)
 
 
 PUB fnt_width(sz)
