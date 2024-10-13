@@ -156,12 +156,16 @@ CON
 
     SET_PHASE_LEN       = $D9      ' $D9 Segment waveform length (unit=DCLKs). Phase 2 (MSBs, POR=%0111) range %0001..%1111, Phase 1 (LSBs, POR=%1000) range %0010..%1111
 
-    SET_SEG_PINS        = $DA      ' $DA Set SEG pins hardware configuration
-        SEG_LR_REMAP    = 5
-        SEG_LR_REMAP_EN = %1 << SEG_LR_REMAP
-        SEG_LR_REMAP_DIS= %0 << SEG_LR_REMAP
-        ALT_SEGPINCFG   = %1 << 4
-        SEQ_SEGPINCFG   = %0 << 4
+    SET_SEG_PINS            = $DA      ' $DA Set SEG pins hardware configuration
+    SET_SEG_PINS_MASK       = $30
+        SEG_LR_REMAP        = 5
+        SEG_PINCFG          = 4
+        SEG_LR_REMAP_MASK   = (1 << SEG_LR_REMAP) ^ SET_SEG_PINS_MASK
+        SEG_PINCFG_MASK     = (1 << SEG_PINCFG) ^ SET_SEG_PINS_MASK
+        SEG_LR_REMAP_EN     = 1 << SEG_LR_REMAP
+        SEG_LR_REMAP_DIS    = 0 << SEG_LR_REMAP
+        ALT_SEGPINCFG       = 1 << SEG_PINCFG
+        SEQ_SEGPINCFG       = 0 << SEG_PINCFG
 
     SET_VCOMH_DESEL     = $DB
     SET_VCOMH_DESEL_MASK= $70

@@ -80,7 +80,7 @@ VAR
     byte _disp_clkdiv_freq
     byte _disp_en, _curs_en, _blink_en
     byte _disp_lines_n, _dblht_en
-    byte _seg_remap, _seg_pincfg
+    byte _set_seg_pins
     byte _ext_vsl, _gpio_state
     byte _phs1_per, _phs2_per
     byte _vcomh_des_lvl
@@ -162,8 +162,7 @@ PUB defaults()
 
     _entry_mode_set := core.SEG0_99 | core.COM0_31
 
-    _seg_remap := core.SEG_LR_REMAP_DIS
-    _seg_pincfg := core.ALT_SEGPINCFG
+    _set_seg_pins := core.SEG_LR_REMAP_DIS | core.ALT_SEGPINCFG
 
     _ext_vsl := core.VSL_INT
     _gpio_state := core.GPIO_OUT_LOW
@@ -514,14 +513,14 @@ PUB mirror_v(state)
     writereg(1, CMDSET_EXTD, core.ENTRY_MODE_SET | _entry_mode_set, 0)
 
 
-PUB pin_cfg(cfg)
+PUB pin_cfg(c)
 ' Change mapping between display data column address and segment driver.
 '   Valid values:
 '       0: Sequential SEG pin cfg
 '       1: Alternative (odd/even) SEG pin cfg
 '   NOTE: Only affects subsequent data input. Data already displayed/in DDRAM will be unchanged.
-    _seg_pincfg := (0 #> cfg <# 1)
-    writereg(1, CMDSET_OLED, core.SET_SEG_PINS, (_seg_remap | _seg_pincfg))
+    _set_seg_pins := (_set_seg_pins & core.SEG_PINCFG_MASK) | (0 #> c <# 1) << core.SEG_PINCFG
+    writereg(1, CMDSET_OLED, core.SET_SEG_PINS, _set_seg_pins)
 
 
 PUB phase1_period(clocks)
@@ -640,14 +639,15 @@ PUB supply_voltage(v)
     writereg(2, CMDSET_EXTD, core.FUNCT_SEL_A, v)
 
 
-PUB text_dir(tdir)
+PUB text_dir(d)
 ' Change mapping between display data column address and segment driver.
 '   Valid values:
 '       0: Disable SEG left/right remap (POR)
 '       1: Enable SEG left/right remap
 '   NOTE: Only affects subsequent data input. Data already displayed/in DDRAM will be unchanged.
-    _seg_remap := ((0 #> tdir <# 1) << core.SEG_LR_REMAP)
-    writereg(1, CMDSET_OLED, core.SET_SEG_PINS, (_seg_remap | _seg_pincfg))
+    _set_seg_pins :=    (_set_seg_pins & core.SEG_LR_REMAP_MASK) | ...
+                        ( (0 #> d <# 1) << core.SEG_LR_REMAP)
+    writereg(1, CMDSET_OLED, core.SET_SEG_PINS, _set_seg_pins)
 
 
 PUB visibility(mode)
