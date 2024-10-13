@@ -106,10 +106,17 @@ CON
 
 'RE bit set 1, SD bit set 0
     FUNCT_SET_1         = $22      ' $22 Function set 1 (RE register 1)
-        CGRAM_BLINK_EN  = %1 << 2
-        CGRAM_BLINK_DIS = %0 << 2  ' (POR)
-        REV_DISP        = %1
-        NORM_DISP       = %0       ' (POR)
+    FUNCT_SET_1_MASK    = $0f
+        N               = 3                     ' same as FUNCT_SET_0
+        BE              = 2
+        RE              = 1                     ' same as FUNCT_SET_0
+        REV_EN          = 0
+        BE_MASK         = (1 << BE) ^ FUNCT_SET_1_MASK
+        REV_EN_MASK     = 1 ^ FUNCT_SET_1_MASK
+        CGRAM_BLINK_EN  = 1 << BE
+        CGRAM_BLINK_DIS = 0 << BE               ' POR
+        REV_DISP        = 1 << REV_EN
+        NORM_DISP       = 0 << REV_EN           ' POR
 
     SET_CGRAM_ADDR      = $40      ' $40 Set CGRAM address in address counter (POR=%00_0000)
     SET_DDRAM_ADDR      = $80      ' $80 Set DDRAM address in address counter (POR=%000_0000)

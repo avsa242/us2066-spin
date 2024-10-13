@@ -72,16 +72,14 @@ VAR
     { shadow registers }
     byte _entry_mode_set
     byte _funct_sel_b
+    byte _funct_sel_c
     byte _disp_clkdiv_freq
     byte _set_seg_pins
-
+    byte _set_phase_len
     byte _fnt_wid, _curs_invert, _disp_lines_nw
     byte _disp_en, _curs_en, _blink_en
     byte _disp_lines_n, _dblht_en
-    byte _funct_sel_c
-    byte _set_phase_len
-    byte _vcomh_des_lvl
-    byte _cgram_blink, _disp_invert
+    byte _funct_set_1
     byte _fadeblink
     byte _disp_width, _disp_height, _disp_xmax, _disp_ymax
 
@@ -164,10 +162,7 @@ PUB defaults()
 
     _set_phase_len := (7 << core.PHASE2) | 8
 
-    _vcomh_des_lvl := 2
-
-    _cgram_blink := core.CGRAM_BLINK_DIS
-    _disp_invert := core.NORM_DISP
+    _funct_set_1 := core.CGRAM_BLINK_DIS | core.NORM_DISP
 
     _fadeblink := 0
 
@@ -668,15 +663,15 @@ PUB visibility(mode)
             _disp_en := 0
         NORM:
             _disp_en := core.DISP_ON
-            _disp_invert := core.NORM_DISP
+            _funct_set_1 := (_funct_set_1 & core.REV_EN_MASK)
         INVERT:
             _disp_en := core.DISP_ON
-            _disp_invert := core.REV_DISP
+            _funct_set_1 := (_funct_set_1 | core.REV_DISP)
         other:
             return
 
     writereg(1, CMDSET_FUND, core.DISP_ONOFF | (_disp_en |_curs_en | _blink_en), 0)
-    writereg(1, CMDSET_EXTD, core.FUNCT_SET_1 | (_cgram_blink | _disp_invert), 0)
+    writereg(1, CMDSET_EXTD, core.FUNCT_SET_1 | _funct_set_1, 0)
 
 
 PRI wr_data(dbyte) | cmd_pkt
