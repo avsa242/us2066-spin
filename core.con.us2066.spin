@@ -4,26 +4,37 @@
     Description:    US2066-specific constants
     Author:         Jesse Burt
     Started:        Dec 30, 2017
-    Updated:        Oct 10, 2024
+    Updated:        Dec 27, 2024
     Copyright (c) 2024 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
 
 CON
 
-    SLAVE_ADDR          = $3C << 1 '$3C - Default slave address of US2066
-    I2C_MAX_FREQ        = 400_000  '400kHz - Max operating freq
-
-    TRES                = 2        ' Reset low width (microseconds)
+    ' timings
+    TRES                = 2                     ' Reset low width (microseconds)
     T_POR               = 1_000                 ' usec
 
-    DEVID_RESP          = $21
-
+    ' I2C
+    SLAVE_ADDR          = $3C << 1
+    I2C_MAX_FREQ        = 400_000
     DATABIT             = $40
     CMDBIT              = $00
     CONTBIT             = $80
     CTRLBYTE_CMD        = CONTBIT | CMDBIT
     CTRLBYTE_DATA       = DATABIT
+
+
+    ' SPI
+    SPI_MODE            = 0
+    SPI_MAX_FREQ        = 1_000_000
+    SPI_START_BYTE      = %11111_0_0_0          ' 5 start bits, R/W, D/C, 1 end bit (0)
+    READ                = 1 << 2                ' b2 0 = write, 1 = read
+    DC_DATA             = 1 << 1                ' b1 0 = command, 1 = data
+
+
+    DEVID_RESP          = $21
+
 
 'Command set: (POR) indicates Power On Reset, or default value.
 '-FUNDAMENTAL COMMAND SET-------

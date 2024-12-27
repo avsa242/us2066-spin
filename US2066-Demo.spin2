@@ -4,10 +4,15 @@
     Description:    Demo of the US2066 driver
     Author:         Jesse Burt
     Started:        Dec 30, 2017
-    Updated:        Oct 10, 2024
+    Updated:        Dec 27, 2024
     Copyright (c) 2024 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
+' Uncomment the two lines below to use the driver with an SPI-connected display
+'#define US2066_SPI
+'#pragma exportdef(US2066_SPI)
+
+' The default is to use the driver in I2C mode
 
 CON
 
@@ -22,14 +27,15 @@ CON
 '    HEIGHT      = 2
 ' --
 
-    DEMO_DELAY  = 2_000                         ' seconds between demos
-    MODE_DELAY  = 1_000                         ' seconds between sub-demos
+    DEMO_DELAY  = 2_000                         ' milliseconds between demos
+    MODE_DELAY  = 1_000                         ' milliseconds between sub-demos
 
 
 OBJ
 
-    oled:   "display.oled-alpha.us2066" | SCL=0, SDA=1, RST=2, I2C_FREQ=100_000, I2C_ADDR=0, ...
-                                            HEIGHT=HEIGHT
+    oled:   "display.oled-alpha.us2066" |   {I2C} SCL=0, SDA=1, I2C_FREQ=400_000, I2C_ADDR=0, ...
+                                            {SPI} CS=0, SCK=1, MOSI=2, MISO=3, ...
+                                            RST=4, HEIGHT=HEIGHT
     ser:    "com.serial.terminal.ansi" | SER_BAUD=2_000_000
 
 
@@ -348,6 +354,7 @@ PUB setup()
     oled.visibility(oled.NORM)
     oled.char_attrs(oled.CHAR_PROC)             ' _interpret_ control chars, don't draw them
 
+
 DAT
 ' Greet text
 '                  0|    |    |    |15
@@ -363,7 +370,7 @@ DAT
 
 DAT
 {
-Copyright 2022 Jesse Burt
+Copyright 2024 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,

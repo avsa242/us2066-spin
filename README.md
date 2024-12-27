@@ -8,7 +8,8 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for US2066-base
 
 ## Salient Features
 
-* I2C connection at up to 400kHz
+* I2C connection at up to 400kHz (P1, P2)
+* SPI connection at up to 1MHz (P1: 25kHz bytecode or 1MHz PASM, P2: up to 1MHz)
 * Set contrast level
 * Set cursor attributes: blinking, inverted, shape
 * Set text attributes: double-height, 5 and 6-pixel width text
@@ -20,7 +21,7 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for US2066-base
 
 P1/SPIN1:
 * spin-standard-library
-* P1/SPIN1: 1 extra core/cog for the PASM I2C engine
+* P1/SPIN1: 1 extra core/cog for the PASM I2C/SPI engine (none if the bytecode-based engine is used)
 * terminal.common.spinh (provided by spin-standard-library)
 
 P2/SPIN2:
@@ -33,8 +34,8 @@ P2/SPIN2:
 | Processor | Language | Compiler               | Backend      | Status                |
 |-----------|----------|------------------------|--------------|-----------------------|
 | P1        | SPIN1    | FlexSpin (6.9.4)       | Bytecode     | OK                    |
-| P1        | SPIN1    | FlexSpin (6.9.4)       | Native/PASM  | OK                    |
-| P2        | SPIN2    | FlexSpin (6.9.4)       | NuCode       | Untested              |
+| P1        | SPIN1    | FlexSpin (6.9.4)       | Native/PASM  | Runtime issues        |
+| P2        | SPIN2    | FlexSpin (6.9.4)       | NuCode       | Runtime issues        |
 | P2        | SPIN2    | FlexSpin (6.9.4)       | Native/PASM2 | OK                    |
 
 (other versions or toolchains not listed are __not supported__, and _may or may not_ work)
@@ -45,5 +46,4 @@ P2/SPIN2:
 * No scrolling support (chipset has horizontal scrolling support)
 * No support for custom characters
 * No support for parallel interface
-* No support for SPI interface
 

@@ -4,10 +4,24 @@
     Description:    Demo of the US2066 driver
     Author:         Jesse Burt
     Started:        Dec 30, 2017
-    Updated:        Oct 10, 2024
+    Updated:        Dec 27, 2024
     Copyright (c) 2024 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
+' Uncomment the two lines below to use the driver with an SPI-connected display
+'#define US2066_SPI
+'#pragma exportdef(US2066_SPI)
+
+' Same as the above, but with a bytecode-based SPI engine
+'#define US2066_SPI_BC
+'#pragma exportdef(US2066_SPI_BC)
+
+' Uncomment the two lines below to use the driver with a bytecode-based I2C engine
+'#define US2066_I2C_BC
+'#pragma exportdef(US2066_I2C_BC)
+
+' The default is to use the driver with a PASM-based I2C engine
+' The bytecode-based engines are slow, but don't require an extra cog
 
 CON
 
@@ -22,15 +36,16 @@ CON
 '    HEIGHT      = 2
 ' --
 
-    DEMO_DELAY  = 2_000                         ' seconds between demos
-    MODE_DELAY  = 1_000                         ' seconds between sub-demos
+    DEMO_DELAY  = 2_000                         ' milliseconds between demos
+    MODE_DELAY  = 1_000                         ' milliseconds between sub-demos
 
 
 OBJ
 
     time:   "time"
-    oled:   "display.oled-alpha.us2066" | SCL=28, SDA=29, RST=24, I2C_FREQ=400_000, I2C_ADDR=0, ...
-                                            HEIGHT=HEIGHT
+    oled:   "display.oled-alpha.us2066" |   {I2C} SCL=28, SDA=29, I2C_FREQ=400_000, I2C_ADDR=0, ...
+                                            {SPI} CS=0, SCK=1, MOSI=2, MISO=3, ...
+                                            RST=4, HEIGHT=HEIGHT
     ser:    "com.serial.terminal.ansi" | SER_BAUD=115_200
 
 
@@ -81,13 +96,13 @@ PUB main()
 PUB contrast_demo() | i
 
     oled.pos_xy(0, 0)
-    oled.printf1(@"Change contrast\n\rlevel:", 0)
+    oled.printf(@"Change contrast\n\rlevel:", 0)
     case HEIGHT
         2:
             repeat i from -255 to 255 step 1
                 oled.pos_xy(7, 1)
                 oled.contrast(||(i))
-                oled.printf2(@"%03.3d %02.2x", ||(i), ||(i))
+                oled.printf(@"%03.3d %02.2x", ||(i), ||(i))
                 time.msleep(10)
         4:
             oled.newline()
@@ -96,7 +111,7 @@ PUB contrast_demo() | i
             repeat i from -255 to 255 step 1
                 oled.pos_xy(0, 2)
                 oled.contrast(||(i))
-                oled.printf3(@"%03.3d %02.2x %08.8b", ||(i), ||(i), ||(i))
+                oled.printf(@"%03.3d %02.2x %08.8b", ||(i), ||(i), ||(i))
                 time.msleep(10)
 
     oled.dbl_height(0)
@@ -115,7 +130,7 @@ PUB count_demo() | i
 
             repeat i from 0 to 3000
                 oled.pos_xy(0, 1)
-                oled.printf1(@"i = %d", i)
+                oled.printf(@"i = %d", i)
         4:
             oled.pos_xy(0, 0)
             oled.strln(@"Rapidly changing")
@@ -123,7 +138,7 @@ PUB count_demo() | i
             oled.strln(@"(compare to LCD!)")
             repeat i from 0 to 3000
                 oled.pos_xy(0, 3)
-                oled.printf1(@"i = %d", i)
+                oled.printf(@"i = %d", i)
 
 
 PUB cursor_demo() | delay, dbl_mode
@@ -209,7 +224,7 @@ PUB dbl_height_demo() | mode, line
             repeat mode from 0 to 4
                 oled.dbl_height(mode)
                 oled.pos_xy(14, 0)
-                oled.printf1(@"Mode %d", mode)
+                oled.printf(@"Mode %d", mode)
                 repeat line from 0 to 3
                     oled.pos_xy(0, line)
                     oled.str(@"Double-height")
@@ -226,7 +241,7 @@ PUB fnt_width_demo() | px, dbl_mode
             repeat px from 6 to 5
                 oled.fnt_width(px)
                 oled.pos_xy(0, 0)
-                oled.printf1(@"%d-pixel width", px)
+                oled.printf(@"%d-pixel width", px)
                 time.msleep(MODE_DELAY)
 
     oled.fnt_width(5)
@@ -315,7 +330,7 @@ PUB position_demo() | x, y
     repeat y from 0 to HEIGHT-1
         repeat x from 0 to WIDTH-1
             oled.pos_xy(0, 0)
-            oled.printf2(@"Position %d,%d ", x, y)
+            oled.printf(@"Position %d,%d ", x, y)
             oled.pos_xy((x-1 #> 0), y)
             oled.char(" ")
             oled.char("-")
@@ -365,7 +380,7 @@ DAT
 
 DAT
 {
-Copyright 2022 Jesse Burt
+Copyright 2024 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,

@@ -4,7 +4,7 @@
     Description:    Driver for US2066-based OLED alphanumeric displays
     Author:         Jesse Burt
     Started:        Dec 30, 2017
-    Updated:        Oct 8, 2024
+    Updated:        Dec 27, 2024
     Copyright (c) 2024 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
@@ -15,15 +15,23 @@ CON
 
     { default I/O settings; these can be overridden in the parent object }
     { display dimensions }
-    WIDTH           = 4
-    HEIGHT          = 20
+    WIDTH           = 20
+    HEIGHT          = 4
 
     { I2C }
     SCL             = 28
     SDA             = 29
-    RST             = 0
+    RST             = 4
     I2C_FREQ        = 100_000
     I2C_ADDR        = 0
+
+    { SPI }
+    CS              = 0
+    SCK             = 1
+    MOSI            = 2
+    MISO            = 3
+    RST             = 4
+    SPI_FREQ        = 1_000_000
 
 
     XMAX            = WIDTH-1
@@ -66,7 +74,8 @@ CON
 VAR
 
     long _char_attrs
-    byte _RESET
+
+    byte _CS, _RESET
     byte _addr_bits
 
     { shadow registers }
@@ -86,14 +95,65 @@ VAR
 
 OBJ
 
-    i2c     : "com.i2c"                         ' I2C engine
-    core    : "core.con.us2066"                 ' HW-specific constants
-    time    : "time"                            ' time-delay routines
+#ifdef US2066_SPI
+    spi:    "com.spi.1mhz"
+#elseifdef US2066_SPI_BC
+# define US2066_SPI
+    spi:    "com.spi.25khz.nocog"
+#elseifdef US2066_I2C_BC
+    i2c:    "com.i2c.nocog"
+#else
+    i2c:    "com.i2c"                           ' I2C engine
+#endif
+    core:   "core.con.us2066"                   ' HW-specific constants
+    time:   "time"                              ' time-delay routines
 
 
 PUB null()
 ' This is not a top-level object
 
+
+#ifdef US2066_SPI
+PUB start(): status
+' Start using default I/O settings
+    return startx(CS, SCK, MOSI, MISO, RST, HEIGHT)
+
+
+PUB startx(CS_PIN, SCK_PIN, MOSI_PIN, MISO_PIN, RST_PIN, DISP_HT): status
+' Start the driver with custom I/O settings
+'   CS_PIN:     SPI chip select, 0..31
+'   SCK_PIN:    SPI clock, 0..31
+'   MOSI_PIN:   SPI Master-out slave-in, 0..31
+'   MISO_PIN:   SPI Master-in slave-out, 0..31
+'   RST_PIN:    display reset, 0..31 (optional; use -1 to disable)
+'   DISP_HT:    display height (2, 4 are common heights)
+'   Returns:
+'       cog ID+1 of SPI engine on success (= calling cog ID+1, if the bytecode SPI engine is used)
+'       0 on failure
+    if (lookdown(CS_PIN: 0..31) and lookdown(SCK_PIN: 0..31) and ...
+        lookdown(MOSI_PIN: 0..31) and lookdown(MISO_PIN: 0..31) and ...
+        lookdown(DISP_HT: 2, 4) )
+        if ( status := spi.init(SCK_PIN, MOSI_PIN, MISO_PIN, core.SPI_MODE) )
+            time.usleep(core.T_POR)
+            _RESET := RST_PIN
+            _CS := CS_PIN
+            outa[_CS] := 1
+            dira[_CS] := 1
+            if ( DISP_HT == 2 )
+                preset_2x16()
+            elseif ( DISP_HT == 4 )
+                preset_4x20()
+            reset()
+            defaults()
+            if ( dev_id() == core.DEVID_RESP )
+                return
+            return
+    ' if this point is reached, something above failed
+    ' Double check I/O pin assignments, connections, power
+    ' Lastly - make sure you have at least one free core/cog
+    return FALSE
+
+#else
 
 PUB start(): status
 ' Start using default I/O settings
@@ -131,12 +191,17 @@ PUB startx(SCL_PIN, SDA_PIN, RST_PIN, I2C_HZ, ADDR_BITS, DISP_HT): status
     ' Double check I/O pin assignments, connections, power
     ' Lastly - make sure you have at least one free core/cog
     return FALSE
+#endif
 
 
 PUB stop()
 ' Turn the display visibility off and stop the I2C cog
     visibility(OFF)
+#ifdef US2066_SPI
+    spi.deinit()
+#else
     i2c.deinit()
+#endif
 
 
 PUB defaults()
@@ -338,11 +403,16 @@ PUB dev_id(): id
 '   Returns: $21 if successful
     writereg(0, CMDSET_FUND, $00, 0)
 
+#ifdef US2066_SPI
+    rd_byte()                                   ' dummy read
+    id := rd_byte()
+#else
     i2c.start()
     i2c.write(SLAVE_RD | _addr_bits)
     i2c.read(i2c.ACK)                           ' dummy read
     id := i2c.read(i2c.NAK)                     ' Second read gets the Part ID
     i2c.stop()
+#endif
 
 
 CON
@@ -408,11 +478,14 @@ PUB disp_rdy(): flag
 ' Flag indicating display is ready
 '   Returns: TRUE (-1) or FALSE (0)
     writereg(0, CMDSET_FUND, 0, 0)
+#ifdef US2066_SPI
+    flag := rd_byte()
+#else
     i2c.start()
     i2c.write(SLAVE_RD | _addr_bits)
     flag := i2c.read(i2c.NAK)
     i2c.stop()
-
+#endif
     return (((flag >> 7) & 1) <> 1)
 
 
@@ -466,10 +539,14 @@ PUB get_pos(): addr
 ' Get current pos in display RAM
 '   Returns: Display address of current cursor pos
     writereg(0, CMDSET_FUND, 0, 0)
+#ifdef US2066_SPI
+    addr := rd_byte()
+#else
     i2c.start()
     i2c.write(SLAVE_RD | _addr_bits)
     addr := i2c.read(TRUE)
     i2c.stop()
+#endif
 
 
 CON
@@ -615,11 +692,17 @@ PUB putchar(ch) | col, row, pos
 
 PUB reset()
 ' Send reset signal to display controller
-    outa[_RESET] := 0
-    dira[_RESET] := 1
-    time.usleep(core.TRES)
-    outa[_RESET] := 1
-    time.msleep(1)
+    if ( lookdown(_RESET: 0..31) )
+        outa[_RESET] := 0
+        dira[_RESET] := 1
+#ifdef __OUTPUT_ASM__
+        ' wait with RESETn low for the minimum width
+        ' but only if FlexSpin's PASM build backend is used; interpreted SPIN is
+        '   far too slow for it to be needed
+        time.usleep(core.TRES)
+#endif
+        outa[_RESET] := 1
+        time.usleep(core.T_POR)
 
 
 CON
@@ -686,6 +769,14 @@ PUB visibility(mode)
 
 PRI wr_data(dbyte) | cmd_pkt
 ' Write bytes with the DATA control byte set
+#ifdef US2066_SPI
+    ' SPI
+    outa[_CS] := 0
+        start_data()
+        wrbyte_as_nibbles(dbyte)
+    outa[_CS] := 1
+#else
+    ' I2C
     cmd_pkt.byte[0] := (SLAVE_WR | _addr_bits)
     cmd_pkt.byte[1] := core.CTRLBYTE_DATA
     cmd_pkt.byte[2] := dbyte
@@ -693,8 +784,88 @@ PRI wr_data(dbyte) | cmd_pkt
     i2c.start()
     i2c.wrblock_lsbf(@cmd_pkt, 3)
     i2c.stop()
+#endif
 
 
+#ifdef US2066_SPI
+PRI rd_byte(): b
+' Read a byte from the display
+    outa[_CS] := 0
+        start_data(core.READ)
+        b := spi.rdbits_lsbf(8)
+    outa[_CS] := 1
+
+
+PRI start_cmd(rw=0)
+' Send start/synchronization string to the display, indicating a command is to follow
+    spi.wr_byte(core.SPI_START_BYTE | rw)
+
+
+PRI start_data(rw=0)
+' Send start/synchronization string to the display, indicating data is to follow
+    spi.wr_byte(core.SPI_START_BYTE | core.DC_DATA | rw)
+
+
+PRI wrbyte_as_nibbles(b)
+' SPI: write a byte as two zero-padded nibbles
+    ' the US2066 expects data bytes to be split up into nibbles, transmitted LSBit-first,
+    '   but still 8 bits at a time; split the byte into two nibbles and mask off the other
+    '   4 bits so they get transmitted as zeroes
+    spi.wrbits_lsbf(b & $0f, 8)               ' b0..3, then %0000
+    spi.wrbits_lsbf( (b >> 4) & $0f, 8)       ' b4..7, then %0000
+
+
+PRI writereg(nr_bytes, cmd_set, cmd, val) | cmd_pkt[4]
+' Write command/value to register
+    outa[_CS] := 0
+        case cmd_set
+            CMDSET_FUND:
+                start_cmd()
+                wrbyte_as_nibbles(cmd)
+            CMDSET_EXTD:
+                case nr_bytes
+                    1:
+                        start_cmd()
+                        wrbyte_as_nibbles(core.CMDSET_EXTD | _disp_lines_n | _dblht_en)
+                        start_cmd()
+                        wrbyte_as_nibbles(cmd)
+                        start_cmd()
+                        wrbyte_as_nibbles(core.CMDSET_FUND | _disp_lines_n | _dblht_en)
+                    2:
+                        start_cmd()
+                        wrbyte_as_nibbles(core.CMDSET_EXTD | _disp_lines_n | _dblht_en)
+                        wrbyte_as_nibbles(cmd)
+                        start_data()
+                        wrbyte_as_nibbles(val)
+                        start_cmd()
+                        wrbyte_as_nibbles(core.CMDSET_FUND | _disp_lines_n | _dblht_en)
+            CMDSET_EXTD_IS:
+                case nr_bytes
+                    1:
+                        start_cmd()
+                        wrbyte_as_nibbles(core.CMDSET_EXTD | _disp_lines_n | _dblht_en | 1)
+                        wrbyte_as_nibbles(cmd)
+                        wrbyte_as_nibbles(core.CMDSET_FUND | _disp_lines_n | _dblht_en)
+                    2:
+                        start_cmd()
+                        wrbyte_as_nibbles(core.CMDSET_EXTD | _disp_lines_n | _dblht_en)
+                        wrbyte_as_nibbles(cmd)
+                        start_data()
+                        wrbyte_as_nibbles(val)
+                        start_cmd()
+                        wrbyte_as_nibbles(core.CMDSET_FUND | _disp_lines_n | _dblht_en)
+            CMDSET_OLED:
+                start_cmd()
+                wrbyte_as_nibbles(core.CMDSET_EXTD | _disp_lines_n | _dblht_en)
+                wrbyte_as_nibbles(core.OLED_CMDSET_ENA)
+                wrbyte_as_nibbles(cmd)
+                wrbyte_as_nibbles(val)          ' yes, this is supposed to be command, not data
+                wrbyte_as_nibbles(core.OLED_CMDSET_DIS)
+                wrbyte_as_nibbles(core.CMDSET_FUND | _disp_lines_n | _dblht_en)
+    outa[_CS] := 1
+
+#else
+' I2C
 PRI writereg(nr_bytes, cmd_set, cmd, val) | cmd_pkt[4]
 ' Write cmd with param 'val' from command set
     cmd_pkt.word[0] := CMD_HDR | _addr_bits
@@ -759,6 +930,7 @@ PRI writereg(nr_bytes, cmd_set, cmd, val) | cmd_pkt[4]
     i2c.start()
     i2c.wrblock_lsbf(@cmd_pkt, nr_bytes)
     i2c.stop()
+#endif
 
 
 DAT
