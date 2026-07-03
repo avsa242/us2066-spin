@@ -4,8 +4,8 @@
     Description:    Driver for US2066-based OLED alphanumeric displays
     Author:         Jesse Burt
     Started:        Dec 30, 2017
-    Updated:        Dec 27, 2024
-    Copyright (c) 2024 - See end of file for terms of use.
+    Updated:        Jul 3, 2026
+    Copyright (c) 2026 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
 
@@ -43,7 +43,6 @@ CON
     ' I2C driver internal
     SLAVE_WR        = core.SLAVE_ADDR
     SLAVE_RD        = SLAVE_WR|1
-    R               = 1
     I2C_MAX_FREQ    = core.I2C_MAX_FREQ
 
 ' Build some basic headers for I2C transactions
@@ -280,6 +279,7 @@ PUB char_gen(pd)
     _funct_sel_b := (_funct_sel_b & core.OPR_MASK) | pd
     writereg(2, CMDSET_EXTD, core.FUNCT_SEL_B, _funct_sel_b)
 
+
 CON
 
     ROM_A   = 0
@@ -396,6 +396,32 @@ PUB cursor_mode(type)
 
     writereg(0, CMDSET_FUND, core.DISP_ONOFF | (_disp_en |_curs_en | _blink_en), 0)
     cursor_invert_ena(_curs_invert >> 1)
+
+
+PUB def_chars(ch_n, p_bm) | cgaddr
+' Define custom character
+'   ch_n:   character number (0..7; number of custom characters actually available depends on
+'       char_gen() setting)
+'   p_bm:   pointer to character bitmap/glyph data (one character)
+'   NOTE: each row of the character at p_bm should be 5 bits wide
+'   Example usage:
+'
+'   DAT                 'col L   R
+'       custom_char byte    %01010  ' row 0
+'                   byte    %10101
+'                   byte    %01010
+'                   byte    %10101
+'                   byte    %01010
+'                   byte    %10101
+'                   byte    %01010
+'                   byte    %10101  ' row 7
+'
+'       oled.def_chars(0, @custom_char)
+    cgaddr := ch_n * 8
+
+    writereg(0, CMDSET_FUND, core.FUNCT_SET_0 | _disp_lines_n | _dblht_en, 0)
+    writereg(0, CMDSET_FUND, core.SET_CGRAM_ADDR | cgaddr, 0)
+    wr_data(p_bm, 8)
 
 
 PUB dev_id(): id
@@ -767,7 +793,7 @@ PUB visibility(mode)
     writereg(1, CMDSET_EXTD, core.FUNCT_SET_1 | _funct_set_1, 0)
 
 
-PRI wr_data(dbyte) | cmd_pkt
+PRI wr_data(dbyte, len=1) | cmd_pkt, l
 ' Write bytes with the DATA control byte set
 #ifdef US2066_SPI
     ' SPI
@@ -777,13 +803,18 @@ PRI wr_data(dbyte) | cmd_pkt
     outa[_CS] := 1
 #else
     ' I2C
-    cmd_pkt.byte[0] := (SLAVE_WR | _addr_bits)
-    cmd_pkt.byte[1] := core.CTRLBYTE_DATA
-    cmd_pkt.byte[2] := dbyte
+    l := 0
+    cmd_pkt.byte[l++] := (SLAVE_WR | _addr_bits)
+    cmd_pkt.byte[l++] := core.CTRLBYTE_DATA
+    if ( len == 1)
+        cmd_pkt.byte[l++] := dbyte
 
     i2c.start()
-    i2c.wrblock_lsbf(@cmd_pkt, 3)
+    i2c.wrblock_lsbf(@cmd_pkt, l)
+    if ( len > 1 )
+        i2c.wrblock_lsbf(dbyte, len)
     i2c.stop()
+
 #endif
 
 
@@ -871,6 +902,8 @@ PRI writereg(nr_bytes, cmd_set, cmd, val) | cmd_pkt[4]
     cmd_pkt.word[0] := CMD_HDR | _addr_bits
     case cmd_set
         CMDSET_FUND:
+            cmd_pkt.byte[0] := SLAVE_WR
+            cmd_pkt.byte[1] := core.CMDBIT
             cmd_pkt.byte[2] := cmd
             nr_bytes := 3
         CMDSET_EXTD:
@@ -935,7 +968,7 @@ PRI writereg(nr_bytes, cmd_set, cmd, val) | cmd_pkt[4]
 
 DAT
 {
-Copyright 2024 Jesse Burt
+Copyright 2026 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,

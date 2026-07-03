@@ -15,6 +15,7 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for US2066-base
 * Set text attributes: double-height, 5 and 6-pixel width text
 * Inverted/normal display
 * Display mirroring (horizontal/vertical/both)
+* Define custom characters
 
 
 ## Requirements
@@ -33,17 +34,22 @@ P2/SPIN2:
 
 | Processor | Language | Compiler               | Backend      | Status                |
 |-----------|----------|------------------------|--------------|-----------------------|
-| P1        | SPIN1    | FlexSpin (6.9.4)       | Bytecode     | OK                    |
-| P1        | SPIN1    | FlexSpin (6.9.4)       | Native/PASM  | Runtime issues        |
-| P2        | SPIN2    | FlexSpin (6.9.4)       | NuCode       | Runtime issues        |
-| P2        | SPIN2    | FlexSpin (6.9.4)       | Native/PASM2 | OK                    |
+| P1        | SPIN1    | FlexSpin (7.6.11)      | Bytecode     | OK                    |
+| P1        | SPIN1    | FlexSpin (7.6.11)      | Native/PASM  | OK                    |
+| P2        | SPIN2    | FlexSpin (7.6.11)      | NuCode       | Runtime issues        |
+| P2        | SPIN2    | FlexSpin (7.6.11)      | Native/PASM2 | OK                    |
 
 (other versions or toolchains not listed are __not supported__, and _may or may not_ work)
+
+
+## Hardware compatibility
+
+* Tested with Newhaven displays NHD-0420CW-Ax3 (20x4)
+* Tested with Newhaven displays NHD-0216CW-Ax3 (16x2)
 
 
 ## Limitations
 
 * No scrolling support (chipset has horizontal scrolling support)
-* No support for custom characters
 * No support for parallel interface
 
