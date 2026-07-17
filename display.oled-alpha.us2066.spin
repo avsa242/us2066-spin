@@ -4,7 +4,7 @@
     Description:    Driver for US2066-based OLED alphanumeric displays
     Author:         Jesse Burt
     Started:        Dec 30, 2017
-    Updated:        Jul 3, 2026
+    Updated:        Jul 17, 2026
     Copyright (c) 2026 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
@@ -67,7 +67,7 @@ CON
     PASM            = TRUE
 
 ' Character attributes
-    CHAR_PROC       = (1 << 1)
+    TERMINAL        = (1 << 1)
 
 
 VAR
@@ -253,7 +253,7 @@ PUB preset_4x20()
 PUB char_attrs(attr)
 ' Set character attributes
 '   Valid values:
-'       CHAR_PROC (2) - process control codes (0 to print literal char)
+'       TERMINAL (2) - process control codes (0 to print literal char)
     _char_attrs := attr
 
 
@@ -665,7 +665,7 @@ PUB tx = putchar
 PUB char = putchar
 PUB putchar(ch) | col, row, pos
 ' Display single character.
-    if (_char_attrs & CHAR_PROC)                ' interpret control characters
+    if (_char_attrs & TERMINAL)                 ' interpret control characters
         case ch
             7:
                 { bell; flash display }

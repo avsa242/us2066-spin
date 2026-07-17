@@ -4,8 +4,8 @@
     Description:    Demo of the US2066 driver
     Author:         Jesse Burt
     Started:        Dec 30, 2017
-    Updated:        Dec 27, 2024
-    Copyright (c) 2024 - See end of file for terms of use.
+    Updated:        Jul 17, 2026
+    Copyright (c) 2026 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
 ' Uncomment the two lines below to use the driver with an SPI-connected display
@@ -362,7 +362,7 @@ PUB setup()
     oled.clear()
     oled.pos_xy(0, 0)
     oled.visibility(oled.NORM)
-    oled.char_attrs(oled.CHAR_PROC)             ' _interpret_ control chars, don't draw them
+    oled.char_attrs(oled.TERMINAL)              ' _interpret_ control chars, don't draw them
 
 
 DAT
@@ -380,7 +380,7 @@ DAT
 
 DAT
 {
-Copyright 2024 Jesse Burt
+Copyright 2026 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
