@@ -49,7 +49,7 @@ dat
                 byte %10001
                 byte %10100
                 byte %10111
- 
+
 
 pub main() | i
 

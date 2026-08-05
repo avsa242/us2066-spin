@@ -4,7 +4,7 @@
     Description:    Driver for US2066-based OLED alphanumeric displays
     Author:         Jesse Burt
     Started:        Dec 30, 2017
-    Updated:        Jul 17, 2026
+    Updated:        Aug 5, 2026
     Copyright (c) 2026 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
@@ -799,7 +799,11 @@ PRI wr_data(dbyte, len=1) | cmd_pkt, l
     ' SPI
     outa[_CS] := 0
         start_data()
-        wrbyte_as_nibbles(dbyte)
+        if ( len == 1 )
+            wrbyte_as_nibbles(dbyte)
+        else
+            repeat len
+                wrbyte_as_nibbles(byte[dbyte++])
     outa[_CS] := 1
 #else
     ' I2C
